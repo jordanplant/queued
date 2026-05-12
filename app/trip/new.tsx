@@ -1,18 +1,34 @@
 import { PARKS } from '@/constants/parks'
 import { useAuth } from '@/context/AuthContext'
 import { createTrip } from '@/services/trips'
-import { router } from 'expo-router'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 export default function NewTrip() {
   const { user } = useAuth()
+  const { from } = useLocalSearchParams<{ from?: string }>()
   const [name, setName] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [startDate, setStartDate] = useState<Date | null>(null)
+  const [endDate, setEndDate] = useState<Date | null>(null)
+  const [showStartPicker, setShowStartPicker] = useState(false)
+  const [showEndPicker, setShowEndPicker] = useState(false)
   const [selectedParks, setSelectedParks] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0]
+  }
+
+  const goBack = () => {
+    if (from === 'profile') {
+      router.replace('/(tabs)/profile')
+    } else {
+      router.replace('/')
+    }
+  }
 
   const togglePark = (parkId: string) => {
     setSelectedParks(prev =>
@@ -35,13 +51,13 @@ export default function NewTrip() {
     try {
       await createTrip({
         name,
-        startDate,
-        endDate,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
         parks: selectedParks,
         status: 'upcoming',
         userId: user.$id,
       })
-      router.replace('/(tabs)/profile')
+      goBack()
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -59,7 +75,11 @@ export default function NewTrip() {
     <ScrollView className="flex-1 bg-[#0D0F14]">
       <View className="px-6 pt-16 pb-8">
 
-        <TouchableOpacity onPress={() => router.back()} className="mb-6">
+        <TouchableOpacity
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          onPress={goBack}
+          className="mb-6"
+        >
           <Text className="text-[#00E5FF] text-sm">← Back</Text>
         </TouchableOpacity>
 
@@ -80,22 +100,62 @@ export default function NewTrip() {
         />
 
         <Text className="text-[#9BA3B8] text-xs mb-2 uppercase tracking-wider">Start Date</Text>
-        <TextInput
-          className="bg-[#1C2030] text-white rounded-xl px-4 py-4 mb-6"
-          placeholder="DD/MM/YYYY"
-          placeholderTextColor="#9BA3B8"
-          value={startDate}
-          onChangeText={setStartDate}
-        />
+        <TouchableOpacity
+          className="bg-[#1C2030] rounded-xl px-4 py-4 mb-2"
+          onPress={() => setShowStartPicker(true)}
+        >
+          <Text className={startDate ? 'text-white' : 'text-[#9BA3B8]'}>
+            {startDate ? formatDate(startDate) : 'YYYY-MM-DD'}
+          </Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <View className="bg-[#1C2030] rounded-xl mb-6">
+            <TouchableOpacity
+              className="items-end px-4 pt-3"
+              onPress={() => setShowStartPicker(false)}
+            >
+              <Text className="text-[#00E5FF] font-semibold">Done</Text>
+            </TouchableOpacity>
+            <DateTimePicker
+              value={startDate ?? new Date()}
+              mode="date"
+              display="spinner"
+              minimumDate={new Date()}
+              onChange={(event, date) => {
+                if (date) setStartDate(date)
+              }}
+            />
+          </View>
+        )}
 
         <Text className="text-[#9BA3B8] text-xs mb-2 uppercase tracking-wider">End Date</Text>
-        <TextInput
-          className="bg-[#1C2030] text-white rounded-xl px-4 py-4 mb-6"
-          placeholder="DD/MM/YYYY"
-          placeholderTextColor="#9BA3B8"
-          value={endDate}
-          onChangeText={setEndDate}
-        />
+        <TouchableOpacity
+          className="bg-[#1C2030] rounded-xl px-4 py-4 mb-2"
+          onPress={() => setShowEndPicker(true)}
+        >
+          <Text className={endDate ? 'text-white' : 'text-[#9BA3B8]'}>
+            {endDate ? formatDate(endDate) : 'YYYY-MM-DD'}
+          </Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <View className="bg-[#1C2030] rounded-xl mb-6">
+            <TouchableOpacity
+              className="items-end px-4 pt-3"
+              onPress={() => setShowEndPicker(false)}
+            >
+              <Text className="text-[#00E5FF] font-semibold">Done</Text>
+            </TouchableOpacity>
+            <DateTimePicker
+              value={endDate ?? startDate ?? new Date()}
+              mode="date"
+              display="spinner"
+              minimumDate={startDate ?? new Date()}
+              onChange={(event, date) => {
+                if (date) setEndDate(date)
+              }}
+            />
+          </View>
+        )}
 
         <Text className="text-[#9BA3B8] text-xs mb-4 uppercase tracking-wider">Parks</Text>
 

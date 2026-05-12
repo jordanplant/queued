@@ -34,3 +34,8 @@ export const updateTrip = async (id: string, data: Partial<Trip>) => {
 export const deleteTrip = async (id: string) => {
   return databases.deleteDocument(DATABASE_ID, TRIPS_ID, id)
 }
+
+export const getTrip = async (id: string) => {
+    const response = await databases.getDocument(DATABASE_ID, TRIPS_ID, id)
+    return response as unknown as Trip
+  }

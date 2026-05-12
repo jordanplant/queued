@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import 'react-native-url-polyfill/auto'
 import '../global.css'
@@ -27,8 +28,10 @@ export default function RootLayout() {
   if (!loaded) return null
 
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </GestureHandlerRootView>
   )
 }

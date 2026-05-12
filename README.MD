@@ -8,6 +8,16 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 
 ## Changelog
 
+### v0.2
+- Trip detail screen with name, resort, park chips, and dates
+- Date picker — native iOS spinner with Done button
+- Dates stored as ISO strings, displayed as YYYY-MM-DD
+- Edit trip modal — slides up pre-filled from detail screen or swipe action
+- Delete trip with swipe gesture and confirmation dialog
+- Today tab countdown — next upcoming trip with days to go
+- Correct back navigation across all screens
+- GestureHandlerRootView added for swipe support
+
 ### v0.1
 - App scaffold with five tabs (Today, Wait Times, Snacks, Itinerary, Profile)
 - Auth — register, login, logout, session persistence
@@ -23,12 +33,13 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 - [x] Auth — register, login, logout, session persistence
 - [x] Trip creation and listing
 - [x] Parks data for all Disney and Universal parks worldwide
-- [ ] Trip detail screen
-- [ ] Date picker
+- [x] Trip detail screen
+- [x] Date picker
+- [x] Edit and delete trips
+- [x] Countdown on dashboard
 - [ ] Snack list with Disney menu data
 - [ ] Live wait times
 - [ ] Itinerary day planner
-- [ ] Countdown on dashboard
 - [ ] Weather widget
 - [ ] Park-reactive accent colours
 - [ ] Push notifications for ride wait times
@@ -47,6 +58,7 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 | Styling | [NativeWind](https://nativewind.dev) (Tailwind CSS for React Native) |
 | Backend | [Appwrite](https://appwrite.io) |
 | Animations | [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/) |
+| Gestures | [React Native Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) |
 
 ---
 
