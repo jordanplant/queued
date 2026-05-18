@@ -1,16 +1,20 @@
+import SwipeableRow from '@/components/SwipeableRow'
+import Colors from '@/constants/Colors'
 import { useAuth } from '@/context/AuthContext'
 import { logout } from '@/lib/auth'
 import { Trip, deleteTrip, getTrips } from '@/services/trips'
 import { router } from 'expo-router'
+import { useColorScheme } from 'nativewind'
 import { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { Swipeable } from 'react-native-gesture-handler'
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 export default function Profile() {
   const { user, setUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [trips, setTrips] = useState<Trip[]>([])
   const [tripsLoading, setTripsLoading] = useState(true)
+  const { colorScheme } = useColorScheme()
+const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
 
   useEffect(() => {
     if (!user) return
@@ -49,92 +53,94 @@ export default function Profile() {
             } catch (e) {
               console.error(e)
             }
-          }
-        }
+          },
+        },
       ]
     )
   }
 
-  const renderRightActions = (tripId: string) => (
-    <View className="flex-row mb-3 gap-2">
-      <TouchableOpacity
-        className="bg-[#00E5FF] justify-center items-center rounded-xl px-6"
-        onPress={() => router.push(`/trip/${tripId}?edit=true&from=profile` as any)}
-      >
-        <Text className="text-[#0D0F14] font-semibold">Edit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        className="bg-red-500 justify-center items-center rounded-xl px-6"
-        onPress={() => handleDelete(tripId)}
-      >
-        <Text className="text-white font-semibold">Delete</Text>
-      </TouchableOpacity>
-    </View>
-  )
-
   return (
-    <ScrollView className="flex-1 bg-[#0D0F14]">
+    <ScrollView className="flex-1 bg-background">
       <View className="px-6 pt-16 pb-8">
 
         {/* User info */}
-        <Text className="text-white text-2xl font-bold mb-1">{user?.name}</Text>
-        <Text className="text-[#9BA3B8] text-sm mb-8">{user?.email}</Text>
+        <Text className="text-text text-2xl font-bold mb-1">{user?.name}</Text>
+        <Text className="text-textSecondary text-sm mb-8">{user?.email}</Text>
 
         {/* Trips */}
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-lg font-semibold">My Trips</Text>
+          <Text className="text-text text-lg font-semibold">My Trips</Text>
           <TouchableOpacity
-            className="bg-[#00E5FF] px-4 py-2 rounded-xl"
+            className="bg-accent px-4 py-2 rounded-xl"
             onPress={() => router.push('/trip/new?from=profile')}
           >
-            <Text className="text-[#0D0F14] font-bold text-sm">+ New Trip</Text>
+            <Text className="text-background font-bold text-sm">+ New Trip</Text>
           </TouchableOpacity>
         </View>
 
         {tripsLoading ? (
-          <ActivityIndicator color="#00E5FF" />
+          <ActivityIndicator color={theme.accent} />
         ) : trips.length === 0 ? (
-          <View className="bg-[#1C2030] rounded-xl p-6 items-center">
-            <Text className="text-[#9BA3B8] text-sm text-center">
+          <View className="bg-surface rounded-xl p-6 items-center">
+            <Text className="text-textSecondary text-sm text-center">
               No trips yet. Create your first one!
             </Text>
           </View>
         ) : (
           trips.map((trip) => (
-            <Swipeable
+            <SwipeableRow
               key={trip.$id}
-              renderRightActions={() => renderRightActions(trip.$id)}
-              overshootRight={false}
+              actions={[
+                {
+                  label: 'Edit',
+                  color: theme.accent,
+                  onPress: () => router.push(`/trip/${trip.$id}?edit=true&from=profile` as any),
+                },
+                {
+                  label: 'Delete',
+                  color: '#EF4444',
+                  textColor: '#FFFFFF',
+                  onPress: () => handleDelete(trip.$id),
+                },
+              ]}
             >
-              <TouchableOpacity
-                className="bg-[#1C2030] rounded-xl p-4 mb-3"
+              <Pressable
                 onPress={() => router.push(`/trip/${trip.$id}?from=profile` as any)}
               >
-                <View className="flex-row justify-between items-center">
-                  <Text className="text-white font-semibold text-base">{trip.name}</Text>
-                  <View className={`px-2 py-1 rounded-full ${
-                    trip.status === 'active' ? 'bg-green-500' :
-                    trip.status === 'upcoming' ? 'bg-[#00E5FF]' : 'bg-[#2E3350]'
-                  }`}>
-                    <Text className="text-xs font-medium text-[#0D0F14]">{trip.status}</Text>
+                {({ pressed }) => (
+                  <View style={{
+                    backgroundColor: pressed ? theme.border : theme.surface,
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 12,
+                  }}>
+                    <View className="flex-row justify-between items-center">
+                      <Text className="text-text font-semibold text-base">{trip.name}</Text>
+                      <View className={`px-2 py-1 rounded-full ${
+                        trip.status === 'active' ? 'bg-green-500' :
+                        trip.status === 'upcoming' ? 'bg-accent' : 'bg-border'
+                      }`}>
+                        <Text className="text-xs font-medium text-background">{trip.status}</Text>
+                      </View>
+                    </View>
+                    <Text className="text-textSecondary text-sm mt-1">
+                      {trip.startDate.split('T')[0]} → {trip.endDate.split('T')[0]}
+                    </Text>
                   </View>
-                </View>
-                <Text className="text-[#9BA3B8] text-sm mt-1">
-                  {trip.startDate.split('T')[0]} → {trip.endDate.split('T')[0]}
-                </Text>
-              </TouchableOpacity>
-            </Swipeable>
+                )}
+              </Pressable>
+            </SwipeableRow>
           ))
         )}
 
         {/* Logout */}
         <TouchableOpacity
-          className="bg-[#1C2030] rounded-xl py-4 items-center mt-8"
+          className="bg-surface rounded-xl py-4 items-center mt-8"
           onPress={handleLogout}
           disabled={loading}
         >
           {loading
-            ? <ActivityIndicator color="#00E5FF" />
+            ? <ActivityIndicator color={theme.accent} />
             : <Text className="text-red-400 font-semibold">Log out</Text>
           }
         </TouchableOpacity>

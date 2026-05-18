@@ -1,4 +1,3 @@
-import { useClientOnlyValue } from '@/components/useClientOnlyValue'
 import { useColorScheme } from '@/components/useColorScheme'
 import Colors from '@/constants/Colors'
 import { useAuth } from '@/context/AuthContext'
@@ -32,7 +31,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: false,
       }}>
       <Tabs.Screen
         name="index"

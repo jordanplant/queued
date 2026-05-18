@@ -1,7 +1,9 @@
+import Colors from '@/constants/Colors'
 import { PARKS } from '@/constants/parks'
 import { Trip, getTrip, updateTrip } from '@/services/trips'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { router, useLocalSearchParams } from 'expo-router'
+import { useColorScheme } from 'nativewind'
 import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
@@ -18,7 +20,6 @@ export default function TripDetail() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Edit modal state
   const [editVisible, setEditVisible] = useState(false)
   const [editName, setEditName] = useState('')
   const [editStartDate, setEditStartDate] = useState<Date | null>(null)
@@ -28,7 +29,9 @@ export default function TripDetail() {
   const [showEndPicker, setShowEndPicker] = useState(false)
   const [saving, setSaving] = useState(false)
   const editOpenedRef = useRef(false)
-
+  const { colorScheme } = useColorScheme()
+  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
+  
   useEffect(() => {
     getTrip(id)
       .then(setTrip)
@@ -96,23 +99,23 @@ export default function TripDetail() {
       hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       onPress={goBack}
     >
-      <Text className="text-[#00E5FF] text-sm">← Back</Text>
+      <Text className="text-accent text-sm">← Back</Text>
     </TouchableOpacity>
   )
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#0D0F14] items-center justify-center">
-        <ActivityIndicator color="#00E5FF" />
+      <View className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator color={theme.accent} />
       </View>
     )
   }
 
   if (!trip) {
     return (
-      <View className="flex-1 bg-[#0D0F14] px-6 pt-16">
+      <View className="flex-1 bg-background px-6 pt-16">
         <BackButton />
-        <Text className="text-white text-lg mt-6">Trip not found.</Text>
+        <Text className="text-text text-lg mt-6">Trip not found.</Text>
       </View>
     )
   }
@@ -134,22 +137,22 @@ export default function TripDetail() {
 
   return (
     <>
-      <ScrollView className="flex-1 bg-[#0D0F14]">
+      <ScrollView className="flex-1 bg-background">
         <View className="px-6 pt-16 pb-8">
 
           {/* Back + Edit row */}
           <View className="flex-row justify-between items-center mb-6">
             <BackButton />
             <TouchableOpacity onPress={openEdit}>
-              <Text className="text-[#00E5FF] text-sm">✎ Edit</Text>
+              <Text className="text-accent text-sm">✎ Edit</Text>
             </TouchableOpacity>
           </View>
 
           {/* Trip name */}
-          <Text className="text-white text-2xl font-bold">{trip.name}</Text>
+          <Text className="text-text text-2xl font-bold">{trip.name}</Text>
 
           {/* Resort names */}
-          <Text className="text-[#9BA3B8] text-base font-medium mb-1">
+          <Text className="text-textSecondary text-base font-medium mb-1">
             {formatList(tripResorts)}
           </Text>
 
@@ -161,15 +164,15 @@ export default function TripDetail() {
                 style={{ backgroundColor: park.color }}
                 className="px-3 py-1 rounded-full"
               >
-                <Text className="text-white text-xs font-semibold">{park.name}</Text>
+                <Text className="text-text text-xs font-semibold">{park.name}</Text>
               </View>
             ))}
           </View>
 
           {/* Dates */}
-          <View className="bg-[#1C2030] rounded-xl p-4 mt-6">
-            <Text className="text-[#9BA3B8] text-xs mb-1">Dates</Text>
-            <Text className="text-white font-semibold">
+          <View className="bg-surface rounded-xl p-4 mt-6">
+            <Text className="text-textSecondary text-xs mb-1">Dates</Text>
+            <Text className="text-text font-semibold">
               {trip.startDate.split('T')[0]} → {trip.endDate.split('T')[0]}
             </Text>
           </View>
@@ -184,49 +187,49 @@ export default function TripDetail() {
         presentationStyle="pageSheet"
         onRequestClose={() => setEditVisible(false)}
       >
-        <ScrollView className="flex-1 bg-[#0D0F14]">
+        <ScrollView className="flex-1 bg-background">
           <View className="px-6 pt-12 pb-8">
 
             {/* Modal header */}
             <View className="flex-row justify-between items-center mb-8">
               <TouchableOpacity onPress={() => setEditVisible(false)}>
-                <Text className="text-[#9BA3B8]">Cancel</Text>
+                <Text className="text-textSecondary">Cancel</Text>
               </TouchableOpacity>
-              <Text className="text-white font-bold text-base">Edit Trip</Text>
+              <Text className="text-text font-bold text-base">Edit Trip</Text>
               <TouchableOpacity onPress={handleSave} disabled={saving}>
                 {saving
-                  ? <ActivityIndicator color="#00E5FF" />
-                  : <Text className="text-[#00E5FF] font-semibold">Save</Text>
+                  ? <ActivityIndicator color={theme.accent} />
+                  : <Text className="text-accent font-semibold">Save</Text>
                 }
               </TouchableOpacity>
             </View>
 
             {/* Name */}
-            <Text className="text-[#9BA3B8] text-xs mb-2 uppercase tracking-wider">Trip Name</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Trip Name</Text>
             <TextInput
-              className="bg-[#1C2030] text-white rounded-xl px-4 py-4 mb-6"
-              placeholderTextColor="#9BA3B8"
+              className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
+              placeholderTextColor={theme.textSecondary}
               value={editName}
               onChangeText={setEditName}
             />
 
             {/* Start date */}
-            <Text className="text-[#9BA3B8] text-xs mb-2 uppercase tracking-wider">Start Date</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Start Date</Text>
             <TouchableOpacity
-              className="bg-[#1C2030] rounded-xl px-4 py-4 mb-2"
+              className="bg-surface rounded-xl px-4 py-4 mb-2"
               onPress={() => setShowStartPicker(true)}
             >
-              <Text className={editStartDate ? 'text-white' : 'text-[#9BA3B8]'}>
+              <Text className={editStartDate ? 'text-text' : 'text-textSecondary'}>
                 {editStartDate ? formatDate(editStartDate) : 'YYYY-MM-DD'}
               </Text>
             </TouchableOpacity>
             {showStartPicker && (
-              <View className="bg-[#1C2030] rounded-xl mb-6">
+              <View className="bg-surface rounded-xl mb-6">
                 <TouchableOpacity
                   className="items-end px-4 pt-3"
                   onPress={() => setShowStartPicker(false)}
                 >
-                  <Text className="text-[#00E5FF] font-semibold">Done</Text>
+                  <Text className="text-accent font-semibold">Done</Text>
                 </TouchableOpacity>
                 <DateTimePicker
                   value={editStartDate ?? new Date()}
@@ -241,22 +244,22 @@ export default function TripDetail() {
             )}
 
             {/* End date */}
-            <Text className="text-[#9BA3B8] text-xs mb-2 uppercase tracking-wider">End Date</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">End Date</Text>
             <TouchableOpacity
-              className="bg-[#1C2030] rounded-xl px-4 py-4 mb-2"
+              className="bg-surface rounded-xl px-4 py-4 mb-2"
               onPress={() => setShowEndPicker(true)}
             >
-              <Text className={editEndDate ? 'text-white' : 'text-[#9BA3B8]'}>
+              <Text className={editEndDate ? 'text-text' : 'text-textSecondary'}>
                 {editEndDate ? formatDate(editEndDate) : 'YYYY-MM-DD'}
               </Text>
             </TouchableOpacity>
             {showEndPicker && (
-              <View className="bg-[#1C2030] rounded-xl mb-6">
+              <View className="bg-surface rounded-xl mb-6">
                 <TouchableOpacity
                   className="items-end px-4 pt-3"
                   onPress={() => setShowEndPicker(false)}
                 >
-                  <Text className="text-[#00E5FF] font-semibold">Done</Text>
+                  <Text className="text-accent font-semibold">Done</Text>
                 </TouchableOpacity>
                 <DateTimePicker
                   value={editEndDate ?? editStartDate ?? new Date()}
@@ -271,16 +274,19 @@ export default function TripDetail() {
             )}
 
             {/* Parks */}
-            <Text className="text-[#9BA3B8] text-xs mb-4 uppercase tracking-wider">Parks</Text>
+            <Text className="text-textSecondary text-xs mb-4 uppercase tracking-wider">Parks</Text>
             {Object.entries(resorts).map(([resort, parks]) => (
               <View key={resort} className="mb-6">
-                <Text className="text-[#9BA3B8] text-xs mb-3">{resort}</Text>
+                <Text className="text-textSecondary text-xs mb-3">{resort}</Text>
                 {parks.map(park => (
                   <TouchableOpacity
                     key={park.id}
-                    className={`flex-row items-center justify-between rounded-xl px-4 py-3 mb-2 ${
-                      editParks.includes(park.id) ? 'bg-[#252840]' : 'bg-[#1C2030]'
-                    }`}
+                    style={{
+                      backgroundColor: editParks.includes(park.id)
+                        ? theme.elevated
+                        : theme.surface
+                    }}
+                    className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
                     onPress={() => togglePark(park.id)}
                   >
                     <View className="flex-row items-center gap-3">
@@ -288,7 +294,7 @@ export default function TripDetail() {
                         style={{ backgroundColor: park.color }}
                         className="w-3 h-3 rounded-full"
                       />
-                      <Text className="text-white text-sm">{park.name}</Text>
+                      <Text className="text-text text-sm">{park.name}</Text>
                     </View>
                     {editParks.includes(park.id) && (
                       <Text style={{ color: park.color }} className="text-sm font-bold">✓</Text>

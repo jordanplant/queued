@@ -5,17 +5,19 @@ module.exports = {
     "./app/(auth)/**/*.{js,jsx,ts,tsx}",
     "./app/(tabs)/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}"
-  ],  presets: [require("nativewind/preset")],
+  ],
+  presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        night: {
-          bg: "#0D0F14",
-          surface: "#1C2030",
-          elevated: "#252840",
-          muted: "#9BA3B8",
-          border: "#2E3350",
-        },
+        background: 'var(--background)',
+        surface: 'var(--surface)',
+        elevated: 'var(--elevated)',
+        accent: 'var(--accent)',
+        text: 'var(--text)',
+        textSecondary: 'var(--text-secondary)',
+        textMuted: 'var(--text-muted)',
+        border: 'var(--border)',
         parks: {
           // Walt Disney World
           "magic-kingdom": "#3B82F6",
