@@ -80,6 +80,7 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 ## Project Structure
 
 
+```
 app/
 ├── (auth)/           # Login & register screens
 ├── (tabs)/           # Main tab navigation
@@ -91,30 +92,30 @@ app/
 └── trip/
     ├── new.tsx       # Create a trip
     └── [id].tsx      # Trip detail
-
+ 
 lib/
 ├── appwrite.ts       # Appwrite client
 ├── auth.ts           # Auth functions
 └── haptics.ts        # Haptic feedback wrapper
-
+ 
 services/
 ├── trips.ts          # Trip CRUD
 ├── waitTimes.ts      # Live wait times, shows, character meets
 └── favourites.ts     # Favourites CRUD
-
+ 
 hooks/
 └── useFavourites.ts  # Favourite toggle with optimistic updates
-
+ 
 components/
 └── SwipeableRow.tsx  # Reusable swipe action component
-
+ 
 context/
 └── AuthContext.tsx   # Global auth state
-
+ 
 constants/
 ├── parks.ts          # All parks data + colours
 └── Colors.ts         # Theme colour tokens
-
+```
 
 ---
 
