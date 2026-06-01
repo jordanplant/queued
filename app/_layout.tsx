@@ -1,9 +1,10 @@
-import { AuthProvider } from '@/context/AuthContext'
+import AppSplashScreen from '@/components/AppSplashScreen'
+import { AuthProvider, useAuth } from '@/context/AuthContext'
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { useFonts } from 'expo-font'
 import { Slot } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 import 'react-native-url-polyfill/auto'
@@ -11,8 +12,10 @@ import '../global.css'
 
 SplashScreen.preventAutoHideAsync()
 
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
+function RootLayoutInner() {
+  const { loading: authLoading } = useAuth()
+  const [splashVisible, setSplashVisible] = useState(true)
+  const [fontsLoaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   })
@@ -22,15 +25,28 @@ export default function RootLayout() {
   }, [error])
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync()
-  }, [loaded])
+    if (fontsLoaded && !authLoading) {
+      SplashScreen.hideAsync()
+    }
+  }, [fontsLoaded, authLoading])
 
-  if (!loaded) return null
+  if (!fontsLoaded) return null
 
+  return (
+    <>
+      <Slot />
+      {splashVisible && (
+        <AppSplashScreen onFadeComplete={() => setSplashVisible(false)} />
+      )}
+    </>
+  )
+}
+
+export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <Slot />
+        <RootLayoutInner />
       </AuthProvider>
     </GestureHandlerRootView>
   )

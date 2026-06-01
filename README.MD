@@ -8,6 +8,23 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 
 ## Changelog
 
+### v0.4
+- Snack tracker — search Disney menu data, add snacks to your list, filter by park
+- Mark snacks as complete, rate them, edit details
+- Snacks stored globally per user in Appwrite
+- Itinerary day planner — timeline view per trip day
+- Park blocks — full day, AM, PM, or custom time ranges with per-park colours
+- Events — specific reservations (dining, shows) pinned to a time
+- Events rendered on top of park blocks with park accent colour indicator
+- Day selector — horizontal scroll of trip dates, auto-scrolls to first item
+- Expand earlier/later — extend the timeline in 2-hour increments
+- Overlap detection — diagonal stripe pattern shown on conflicting blocks
+- Conflict resolution — auto-adjust or remove conflicting block when overlap exceeds 50%
+- Edit blocks and events — tap to edit, long press to delete
+- Park picker filtered to trip parks only, highlights parks already on schedule
+- Time picker — native OS wheel, defaults to 9am for new items
+- Splash screen — logo, app name, tagline with fade transition
+
 ### v0.3
 - Live wait times screen with attractions, shows, and character meets tabs
 - Park hours bar showing open, close, early entry, and special events
@@ -54,8 +71,8 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 - [x] Favourites — swipe or long press, stored in Appwrite
 - [x] Browsing mode — browse any park without a trip
 - [x] Park colours — UI elements themed to the selected park
-- [ ] Snack list with Disney menu data
-- [ ] Itinerary day planner
+- [x] Snack tracker — search, add, edit, complete, rate
+- [x] Itinerary day planner — timeline with park blocks and events
 - [ ] Weather widget
 - [ ] Push notifications for ride wait times
 - [ ] Queue games
@@ -79,7 +96,6 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 
 ## Project Structure
 
-
 ```
 app/
 ├── (auth)/           # Login & register screens
@@ -92,26 +108,30 @@ app/
 └── trip/
     ├── new.tsx       # Create a trip
     └── [id].tsx      # Trip detail
- 
+
 lib/
 ├── appwrite.ts       # Appwrite client
 ├── auth.ts           # Auth functions
 └── haptics.ts        # Haptic feedback wrapper
- 
+
 services/
 ├── trips.ts          # Trip CRUD
 ├── waitTimes.ts      # Live wait times, shows, character meets
-└── favourites.ts     # Favourites CRUD
- 
+├── favourites.ts     # Favourites CRUD
+├── snacks.ts         # Snack CRUD
+└── itinerary.ts      # Itinerary CRUD
+
 hooks/
-└── useFavourites.ts  # Favourite toggle with optimistic updates
- 
+├── useFavourites.ts  # Favourite toggle with optimistic updates
+├── useSnacks.ts      # Snack state and actions
+└── useItinerary.ts   # Itinerary state, conflict detection, batched updates
+
 components/
 └── SwipeableRow.tsx  # Reusable swipe action component
- 
+
 context/
 └── AuthContext.tsx   # Global auth state
- 
+
 constants/
 ├── parks.ts          # All parks data + colours
 └── Colors.ts         # Theme colour tokens
