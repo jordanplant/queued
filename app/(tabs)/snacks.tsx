@@ -1,12 +1,12 @@
-import SwipeableRow from '@/components/SwipeableRow'
-import Colors from '@/constants/Colors'
-import { useAuth } from '@/context/AuthContext'
-import { useSnacks } from '@/hooks/useSnacks'
-import { Snack } from '@/services/snacks'
-import { getTrips } from '@/services/trips'
-import { Ionicons } from '@expo/vector-icons'
-import { useColorScheme } from 'nativewind'
-import { useEffect, useRef, useState } from 'react'
+import SwipeableRow from "@/components/SwipeableRow";
+import Colors from "@/constants/Colors";
+import { useAuth } from "@/context/AuthContext";
+import { useSnacks } from "@/hooks/useSnacks";
+import { Snack } from "@/services/snacks";
+
+import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,132 +16,135 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
+} from "react-native";
 
 type MenuItem = {
-  itemTitle: string
-  itemPrice: number
-  restaurantName: string
-  restaurantLocation: string
-  subLocation: string
-  itemDescription: string
-}
+  itemTitle: string;
+  itemPrice: number;
+  restaurantName: string;
+  restaurantLocation: string;
+  subLocation: string;
+  itemDescription: string;
+};
 
-const MENU_URL = 'https://jordanplant.github.io/Data/menu.json'
+const MENU_URL = "https://jordanplant.github.io/Data/menu.json";
 
 export default function Snacks() {
-  const { user } = useAuth()
-  const { colorScheme } = useColorScheme()
-  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
-  const { snacks, loading, addSnack, markEaten, unmarkEaten, removeSnack, rateSnack, updateSnackDetails } = useSnacks()
+  const { user, currentTrip } = useAuth();
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const {
+    snacks,
+    loading,
+    addSnack,
+    markEaten,
+    unmarkEaten,
+    removeSnack,
+    rateSnack,
+    updateSnackDetails,
+  } = useSnacks();
 
   // Search
-  const [searchTerm, setSearchTerm] = useState('')
-  const [menuData, setMenuData] = useState<MenuItem[]>([])
-  const [searchResults, setSearchResults] = useState<MenuItem[]>([])
-  const [searchLoading, setSearchLoading] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [menuData, setMenuData] = useState<MenuItem[]>([]);
+  const [searchResults, setSearchResults] = useState<MenuItem[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter
-  const [filterModalVisible, setFilterModalVisible] = useState(false)
-  const [selectedParks, setSelectedParks] = useState<string[]>([])
-  const [availableParks, setAvailableParks] = useState<string[]>([])
-  const [tripParkNames, setTripParkNames] = useState<string[]>([])
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedParks, setSelectedParks] = useState<string[]>([]);
+  const [availableParks, setAvailableParks] = useState<string[]>([]);
+  const [tripParkNames, setTripParkNames] = useState<string[]>([]);
 
   // Add / Edit modal
-  const [snackModalVisible, setSnackModalVisible] = useState(false)
-  const [editingSnack, setEditingSnack] = useState<Snack | null>(null)
-  const [modalTitle, setModalTitle] = useState('')
-  const [modalPrice, setModalPrice] = useState('')
-  const [modalRestaurant, setModalRestaurant] = useState('')
-  const [modalLocation, setModalLocation] = useState('')
+  const [snackModalVisible, setSnackModalVisible] = useState(false);
+  const [editingSnack, setEditingSnack] = useState<Snack | null>(null);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalPrice, setModalPrice] = useState("");
+  const [modalRestaurant, setModalRestaurant] = useState("");
+  const [modalLocation, setModalLocation] = useState("");
 
   // Rating
-  const [ratingSnackId, setRatingSnackId] = useState<string | null>(null)
-  const [pendingRating, setPendingRating] = useState(0)
+  const [ratingSnackId, setRatingSnackId] = useState<string | null>(null);
+  const [pendingRating, setPendingRating] = useState(0);
 
   // Load menu data once
   useEffect(() => {
     fetch(MENU_URL)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setMenuData)
-      .catch(console.error)
-  }, [])
+      .catch(console.error);
+  }, []);
 
   // Load trip parks for filter suggestions
   useEffect(() => {
-    if (!user) return
-    getTrips(user.$id).then(trips => {
-      const now = new Date()
-      const upcoming = trips
-        .filter(t => new Date(t.startDate) >= now || t.status === 'active')
-        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-      const nextTrip = upcoming[0] ?? trips[0]
-      if (nextTrip?.parks?.length) setTripParkNames(nextTrip.parks)
-    }).catch(console.error)
-  }, [user])
-
+    if (!currentTrip?.parks?.length) return;
+    setTripParkNames(currentTrip.parks);
+  }, [currentTrip]);
   // Build available parks from snack list
   useEffect(() => {
-    const parks = [...new Set(
-      snacks.map(s => s.restaurantLocation).filter((p): p is string => !!p)
-    )].sort()
-    setAvailableParks(parks)
-  }, [snacks])
+    const parks = [
+      ...new Set(
+        snacks.map((s) => s.restaurantLocation).filter((p): p is string => !!p),
+      ),
+    ].sort();
+    setAvailableParks(parks);
+  }, [snacks]);
 
   // Search logic
   useEffect(() => {
-    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
     if (searchTerm.length < 3) {
-      setSearchResults([])
-      setDropdownOpen(false)
-      return
+      setSearchResults([]);
+      setDropdownOpen(false);
+      return;
     }
-    setSearchLoading(true)
+    setSearchLoading(true);
     searchTimeout.current = setTimeout(() => {
-      const filtered = menuData.filter(item =>
-        item.itemTitle.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      setSearchResults(filtered)
-      setDropdownOpen(true)
-      setSearchLoading(false)
-    }, 200)
-  }, [searchTerm, menuData])
+      const filtered = menuData.filter((item) =>
+        item.itemTitle.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+      setSearchResults(filtered);
+      setDropdownOpen(true);
+      setSearchLoading(false);
+    }, 200);
+  }, [searchTerm, menuData]);
 
   // ── Modal helpers ──────────────────────────────────────────
-  const openAddModal = (prefillTitle = '') => {
-    setEditingSnack(null)
-    setModalTitle(prefillTitle)
-    setModalPrice('')
-    setModalRestaurant('')
-    setModalLocation('')
-    setSnackModalVisible(true)
-  }
+  const openAddModal = (prefillTitle = "") => {
+    setEditingSnack(null);
+    setModalTitle(prefillTitle);
+    setModalPrice("");
+    setModalRestaurant("");
+    setModalLocation("");
+    setSnackModalVisible(true);
+  };
 
   const openEditModal = (snack: Snack) => {
-    setEditingSnack(snack)
-    setModalTitle(snack.itemTitle)
-    setModalPrice(snack.itemPrice?.toString() ?? '')
-    setModalRestaurant(snack.restaurantName ?? '')
-    setModalLocation(snack.restaurantLocation ?? '')
-    setSnackModalVisible(true)
-  }
+    setEditingSnack(snack);
+    setModalTitle(snack.itemTitle);
+    setModalPrice(snack.itemPrice?.toString() ?? "");
+    setModalRestaurant(snack.restaurantName ?? "");
+    setModalLocation(snack.restaurantLocation ?? "");
+    setSnackModalVisible(true);
+  };
 
   const closeSnackModal = () => {
-    setSnackModalVisible(false)
-    setEditingSnack(null)
-  }
+    setSnackModalVisible(false);
+    setEditingSnack(null);
+  };
 
   const onModalSubmit = async () => {
-    if (!modalTitle.trim()) return
+    if (!modalTitle.trim()) return;
     if (editingSnack) {
       await updateSnackDetails(editingSnack.$id, {
         itemTitle: modalTitle.trim(),
         itemPrice: modalPrice ? parseFloat(modalPrice) : null,
         restaurantName: modalRestaurant.trim() || null,
         restaurantLocation: modalLocation.trim() || null,
-      })
+      });
     } else {
       await addSnack({
         itemTitle: modalTitle.trim(),
@@ -150,10 +153,10 @@ export default function Snacks() {
         restaurantLocation: modalLocation.trim() || null,
         subLocation: null,
         itemDescription: null,
-      })
+      });
     }
-    closeSnackModal()
-  }
+    closeSnackModal();
+  };
 
   // ── Search actions ─────────────────────────────────────────
   const onSelectItem = (item: MenuItem) => {
@@ -164,45 +167,50 @@ export default function Snacks() {
       restaurantLocation: item.restaurantLocation,
       subLocation: item.subLocation,
       itemDescription: item.itemDescription,
-    })
-    setSearchTerm('')
-    setDropdownOpen(false)
-  }
+    });
+    setSearchTerm("");
+    setDropdownOpen(false);
+  };
 
   // ── Rating ─────────────────────────────────────────────────
   const onMarkEaten = (id: string) => {
-    setRatingSnackId(id)
-    setPendingRating(0)
-  }
+    setRatingSnackId(id);
+    setPendingRating(0);
+  };
 
   const onSubmitRating = () => {
-    if (!ratingSnackId) return
-    markEaten(ratingSnackId, pendingRating > 0 ? pendingRating : null)
-    setRatingSnackId(null)
-    setPendingRating(0)
-  }
+    if (!ratingSnackId) return;
+    markEaten(ratingSnackId, pendingRating > 0 ? pendingRating : null);
+    setRatingSnackId(null);
+    setPendingRating(0);
+  };
 
   const onSkipRating = () => {
-    if (!ratingSnackId) return
-    markEaten(ratingSnackId, null)
-    setRatingSnackId(null)
-    setPendingRating(0)
-  }
+    if (!ratingSnackId) return;
+    markEaten(ratingSnackId, null);
+    setRatingSnackId(null);
+    setPendingRating(0);
+  };
 
   const onCancelRating = () => {
-    setRatingSnackId(null)
-    setPendingRating(0)
-  }
+    setRatingSnackId(null);
+    setPendingRating(0);
+  };
 
   // ── Derived data ───────────────────────────────────────────
-  const filteredSnacks = selectedParks.length > 0
-    ? snacks.filter(s => s.restaurantLocation && selectedParks.includes(s.restaurantLocation))
-    : snacks
+  const filteredSnacks =
+    selectedParks.length > 0
+      ? snacks.filter(
+          (s) =>
+            s.restaurantLocation &&
+            selectedParks.includes(s.restaurantLocation),
+        )
+      : snacks;
 
   const sortedSnacks = [
-    ...filteredSnacks.filter(s => !s.completed),
-    ...filteredSnacks.filter(s => s.completed),
-  ]
+    ...filteredSnacks.filter((s) => !s.completed),
+    ...filteredSnacks.filter((s) => s.completed),
+  ];
 
   // ── Render helpers ─────────────────────────────────────────
   const StarRating = () => (
@@ -213,14 +221,19 @@ export default function Snacks() {
       <View className="flex-row items-center gap-3">
         <Ionicons name="checkmark-circle" size={22} color={theme.accent} />
         <View>
-          <Text className="text-text text-xs font-medium mb-1">Rate this snack:</Text>
+          <Text className="text-text text-xs font-medium mb-1">
+            Rate this snack:
+          </Text>
           <View className="flex-row gap-1">
-            {[1, 2, 3, 4, 5].map(star => (
-              <TouchableOpacity key={star} onPress={() => setPendingRating(star)}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity
+                key={star}
+                onPress={() => setPendingRating(star)}
+              >
                 <Ionicons
-                  name={star <= pendingRating ? 'star' : 'star-outline'}
+                  name={star <= pendingRating ? "star" : "star-outline"}
                   size={22}
-                  color={star <= pendingRating ? '#FFD700' : theme.textMuted}
+                  color={star <= pendingRating ? "#FFD700" : theme.textMuted}
                 />
               </TouchableOpacity>
             ))}
@@ -233,7 +246,12 @@ export default function Snacks() {
           className="px-3 py-1 rounded-full border"
           style={{ borderColor: theme.accent }}
         >
-          <Text style={{ color: theme.accent }} className="text-xs font-semibold">Submit</Text>
+          <Text
+            style={{ color: theme.accent }}
+            className="text-xs font-semibold"
+          >
+            Submit
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onSkipRating}>
           <Text className="text-textMuted text-xs">Skip</Text>
@@ -243,37 +261,39 @@ export default function Snacks() {
         </TouchableOpacity>
       </View>
     </View>
-  )
+  );
 
   const renderSnack = ({ item }: { item: Snack }) => {
-    if (ratingSnackId === item.$id) return <StarRating />
+    if (ratingSnackId === item.$id) return <StarRating />;
 
     return (
       <SwipeableRow
         marginBottom={8}
         actions={[
           {
-            icon: 'create-outline',
+            icon: "create-outline",
             color: `${theme.accent}20`,
             textColor: theme.accent,
             onPress: () => openEditModal(item),
           },
           {
-            icon: 'trash-outline',
-            color: '#FF4D4D20',
-            textColor: '#FF4D4D',
+            icon: "trash-outline",
+            color: "#FF4D4D20",
+            textColor: "#FF4D4D",
             onPress: () => removeSnack(item.$id),
           },
         ]}
       >
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => item.completed ? unmarkEaten(item.$id) : onMarkEaten(item.$id)}
+          onPress={() =>
+            item.completed ? unmarkEaten(item.$id) : onMarkEaten(item.$id)
+          }
           className="rounded-xl px-4 py-3 mb-2 flex-row items-center gap-3"
           style={{ backgroundColor: theme.surface }}
         >
           <Ionicons
-            name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
+            name={item.completed ? "checkmark-circle" : "ellipse-outline"}
             size={22}
             color={item.completed ? theme.accent : theme.textMuted}
           />
@@ -295,34 +315,42 @@ export default function Snacks() {
                 item.itemPrice ? `$${item.itemPrice.toFixed(2)}` : null,
                 item.restaurantName,
                 item.restaurantLocation,
-              ].filter(Boolean).join(' · ')}
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </Text>
           </View>
 
           {item.completed && item.rating ? (
             <View className="flex-row gap-0.5">
-              {[1, 2, 3, 4, 5].map(star => (
+              {[1, 2, 3, 4, 5].map((star) => (
                 <Ionicons
                   key={star}
-                  name={star <= item.rating! ? 'star' : 'star-outline'}
+                  name={star <= item.rating! ? "star" : "star-outline"}
                   size={12}
-                  color={star <= item.rating! ? '#FFD700' : theme.textMuted}
+                  color={star <= item.rating! ? "#FFD700" : theme.textMuted}
                 />
               ))}
             </View>
           ) : item.completed && !item.rating ? (
-            <TouchableOpacity onPress={() => { setRatingSnackId(item.$id); setPendingRating(0) }}>
-              <Text style={{ color: theme.accent }} className="text-xs">Rate</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setRatingSnackId(item.$id);
+                setPendingRating(0);
+              }}
+            >
+              <Text style={{ color: theme.accent }} className="text-xs">
+                Rate
+              </Text>
             </TouchableOpacity>
           ) : null}
         </TouchableOpacity>
       </SwipeableRow>
-    )
-  }
+    );
+  };
 
   return (
     <View className="flex-1 bg-background">
-
       {/* ── Header ── */}
       <View className="px-6 pt-16 pb-4">
         <View className="flex-row items-center justify-between mb-4">
@@ -347,15 +375,26 @@ export default function Snacks() {
           />
           <View className="flex-row items-center gap-2">
             {searchTerm.length > 0 && (
-              <TouchableOpacity onPress={() => { setSearchTerm(''); setDropdownOpen(false) }}>
-                <Ionicons name="close-circle" size={16} color={theme.textMuted} />
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchTerm("");
+                  setDropdownOpen(false);
+                }}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={16}
+                  color={theme.textMuted}
+                />
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={() => setFilterModalVisible(true)}>
               <Ionicons
                 name="options-outline"
                 size={18}
-                color={selectedParks.length > 0 ? theme.accent : theme.textMuted}
+                color={
+                  selectedParks.length > 0 ? theme.accent : theme.textMuted
+                }
               />
             </TouchableOpacity>
           </View>
@@ -380,7 +419,9 @@ export default function Snacks() {
                       onPress={() => onSelectItem(item)}
                       className="px-4 py-3 border-b border-border"
                     >
-                      <Text className="text-text text-sm" numberOfLines={1}>{item.itemTitle}</Text>
+                      <Text className="text-text text-sm" numberOfLines={1}>
+                        {item.itemTitle}
+                      </Text>
                       <Text className="text-textSecondary text-xs">
                         {item.restaurantName} · {item.restaurantLocation}
                       </Text>
@@ -389,13 +430,17 @@ export default function Snacks() {
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
-                      setDropdownOpen(false)
-                      openAddModal(searchTerm)
-                      setSearchTerm('')
+                      setDropdownOpen(false);
+                      openAddModal(searchTerm);
+                      setSearchTerm("");
                     }}
                     className="px-4 py-3 flex-row items-center gap-2"
                   >
-                    <Ionicons name="add-circle-outline" size={16} color={theme.accent} />
+                    <Ionicons
+                      name="add-circle-outline"
+                      size={16}
+                      color={theme.accent}
+                    />
                     <Text style={{ color: theme.accent }} className="text-sm">
                       Add "{searchTerm}" manually
                     </Text>
@@ -413,7 +458,9 @@ export default function Snacks() {
             className="flex-row items-center gap-1 self-start bg-surface rounded-full px-3 py-1 mt-2"
           >
             <Text style={{ color: theme.accent }} className="text-xs">
-              {selectedParks.length === 1 ? selectedParks[0] : `${selectedParks.length} parks`}
+              {selectedParks.length === 1
+                ? selectedParks[0]
+                : `${selectedParks.length} parks`}
             </Text>
             <Ionicons name="close" size={12} color={theme.accent} />
           </TouchableOpacity>
@@ -428,26 +475,32 @@ export default function Snacks() {
       ) : (
         <FlatList
           data={sortedSnacks}
-          keyExtractor={item => item.$id}
+          keyExtractor={(item) => item.$id}
           renderItem={renderSnack}
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32 }}
           keyboardShouldPersistTaps="handled"
           ListHeaderComponent={
             sortedSnacks.length > 0 ? (
               <Text className="text-textMuted text-xs mb-3">
-                {filteredSnacks.filter(s => !s.completed).length} to try ·{' '}
-                {filteredSnacks.filter(s => s.completed).length} eaten
-                {selectedParks.length > 0 ? ` · ${selectedParks.length === 1 ? selectedParks[0] : `${selectedParks.length} parks`}` : ''}
+                {filteredSnacks.filter((s) => !s.completed).length} to try ·{" "}
+                {filteredSnacks.filter((s) => s.completed).length} eaten
+                {selectedParks.length > 0
+                  ? ` · ${selectedParks.length === 1 ? selectedParks[0] : `${selectedParks.length} parks`}`
+                  : ""}
               </Text>
             ) : null
           }
           ListEmptyComponent={
             <View className="items-center justify-center pt-16">
-              <Ionicons name="fast-food-outline" size={40} color={theme.textMuted} />
+              <Ionicons
+                name="fast-food-outline"
+                size={40}
+                color={theme.textMuted}
+              />
               <Text className="text-textMuted text-sm mt-4 text-center">
                 {selectedParks.length > 0
-                  ? `No snacks saved for ${selectedParks.join(', ')}`
-                  : 'Search above to start building your snack list'}
+                  ? `No snacks saved for ${selectedParks.join(", ")}`
+                  : "Search above to start building your snack list"}
               </Text>
             </View>
           }
@@ -464,14 +517,16 @@ export default function Snacks() {
         <View className="flex-1 bg-background px-6 pt-12 pb-8">
           <View className="flex-row justify-between items-center mb-8">
             <Text className="text-text font-bold text-base">
-              {editingSnack ? 'Edit Snack' : 'Add Snack'}
+              {editingSnack ? "Edit Snack" : "Add Snack"}
             </Text>
             <TouchableOpacity onPress={closeSnackModal}>
               <Text className="text-textSecondary">Cancel</Text>
             </TouchableOpacity>
           </View>
 
-          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Name</Text>
+          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+            Name
+          </Text>
           <TextInput
             className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
             placeholder="e.g. Dole Whip"
@@ -480,7 +535,9 @@ export default function Snacks() {
             onChangeText={setModalTitle}
           />
 
-          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Price</Text>
+          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+            Price
+          </Text>
           <TextInput
             className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
             placeholder="e.g. 5.99"
@@ -490,7 +547,9 @@ export default function Snacks() {
             keyboardType="decimal-pad"
           />
 
-          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Restaurant</Text>
+          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+            Restaurant
+          </Text>
           <TextInput
             className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
             placeholder="e.g. Aloha Isle"
@@ -499,7 +558,9 @@ export default function Snacks() {
             onChangeText={setModalRestaurant}
           />
 
-          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Park</Text>
+          <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+            Park
+          </Text>
           <TextInput
             className="bg-surface text-text rounded-xl px-4 py-4 mb-8"
             placeholder="e.g. Magic Kingdom"
@@ -513,8 +574,11 @@ export default function Snacks() {
             className="rounded-xl py-4 items-center"
             style={{ backgroundColor: theme.accent }}
           >
-            <Text style={{ color: theme.background }} className="font-bold text-base">
-              {editingSnack ? 'Update' : 'Add Snack'}
+            <Text
+              style={{ color: theme.background }}
+              className="font-bold text-base"
+            >
+              {editingSnack ? "Update" : "Add Snack"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -530,7 +594,9 @@ export default function Snacks() {
         <ScrollView className="flex-1 bg-background">
           <View className="px-6 pt-12 pb-8">
             <View className="flex-row justify-between items-center mb-8">
-              <Text className="text-text font-bold text-base">Filter by Park</Text>
+              <Text className="text-text font-bold text-base">
+                Filter by Park
+              </Text>
               <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
                 <Text className="text-textSecondary">Close</Text>
               </TouchableOpacity>
@@ -539,26 +605,47 @@ export default function Snacks() {
             <TouchableOpacity
               onPress={() => setSelectedParks([])}
               className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
-              style={{ backgroundColor: selectedParks.length === 0 ? theme.elevated : theme.surface }}
+              style={{
+                backgroundColor:
+                  selectedParks.length === 0 ? theme.elevated : theme.surface,
+              }}
             >
               <Text className="text-text text-sm">All Parks</Text>
-              {selectedParks.length === 0 && <Ionicons name="checkmark" size={16} color={theme.accent} />}
+              {selectedParks.length === 0 && (
+                <Ionicons name="checkmark" size={16} color={theme.accent} />
+              )}
             </TouchableOpacity>
 
             {tripParkNames.length > 0 && (
               <>
-                <Text className="text-textMuted text-xs mt-4 mb-2">Your Next Trip</Text>
-                {tripParkNames.map(park => (
+                <Text className="text-textMuted text-xs mt-4 mb-2">
+                  Your Next Trip
+                </Text>
+                {tripParkNames.map((park) => (
                   <TouchableOpacity
                     key={park}
-                    onPress={() => setSelectedParks(prev =>
-                      prev.includes(park) ? prev.filter(p => p !== park) : [...prev, park]
-                    )}
+                    onPress={() =>
+                      setSelectedParks((prev) =>
+                        prev.includes(park)
+                          ? prev.filter((p) => p !== park)
+                          : [...prev, park],
+                      )
+                    }
                     className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
-                    style={{ backgroundColor: selectedParks.includes(park) ? theme.elevated : theme.surface }}
+                    style={{
+                      backgroundColor: selectedParks.includes(park)
+                        ? theme.elevated
+                        : theme.surface,
+                    }}
                   >
                     <Text className="text-text text-sm">{park}</Text>
-                    {selectedParks.includes(park) && <Ionicons name="checkmark" size={16} color={theme.accent} />}
+                    {selectedParks.includes(park) && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.accent}
+                      />
+                    )}
                   </TouchableOpacity>
                 ))}
               </>
@@ -566,18 +653,34 @@ export default function Snacks() {
 
             {availableParks.length > 0 && (
               <>
-                <Text className="text-textMuted text-xs mt-4 mb-2">In Your List</Text>
-                {availableParks.map(park => (
+                <Text className="text-textMuted text-xs mt-4 mb-2">
+                  In Your List
+                </Text>
+                {availableParks.map((park) => (
                   <TouchableOpacity
                     key={park}
-                    onPress={() => setSelectedParks(prev =>
-                      prev.includes(park) ? prev.filter(p => p !== park) : [...prev, park]
-                    )}
+                    onPress={() =>
+                      setSelectedParks((prev) =>
+                        prev.includes(park)
+                          ? prev.filter((p) => p !== park)
+                          : [...prev, park],
+                      )
+                    }
                     className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
-                    style={{ backgroundColor: selectedParks.includes(park) ? theme.elevated : theme.surface }}
+                    style={{
+                      backgroundColor: selectedParks.includes(park)
+                        ? theme.elevated
+                        : theme.surface,
+                    }}
                   >
                     <Text className="text-text text-sm">{park}</Text>
-                    {selectedParks.includes(park) && <Ionicons name="checkmark" size={16} color={theme.accent} />}
+                    {selectedParks.includes(park) && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.accent}
+                      />
+                    )}
                   </TouchableOpacity>
                 ))}
               </>
@@ -586,5 +689,5 @@ export default function Snacks() {
         </ScrollView>
       </Modal>
     </View>
-  )
+  );
 }
