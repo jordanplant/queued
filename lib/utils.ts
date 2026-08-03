@@ -8,3 +8,8 @@ export const formatTripDate = (iso: string) => {
     month: "short",
   });
 };
+
+export const formatShortDate = (iso: string) => {
+  const [year, month, day] = iso.split("T")[0].split("-");
+  return `${day}/${month}/${year}`;
+};

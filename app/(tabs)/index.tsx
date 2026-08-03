@@ -5,7 +5,7 @@ import WeatherCard from "@/components/today/WeatherCard";
 import Colors from "@/constants/Colors";
 import { PARKS, RESORTS } from "@/constants/parks";
 import { useAuth } from "@/context/AuthContext";
-import { toDateOnly } from "@/lib/utils";
+import { formatShortDate, toDateOnly } from "@/lib/utils";
 import { Trip, getTrips } from "@/services/trips";
 import {
   DayForecast,
@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -190,7 +190,8 @@ export default function Today() {
                     {trip.name}
                   </Text>
                   <Text className="text-textMuted text-xs mt-0.5">
-                    {toDateOnly(trip.startDate)} → {toDateOnly(trip.endDate)}
+                    {formatShortDate(trip.startDate)} →{" "}
+                    {formatShortDate(trip.endDate)}
                   </Text>
                 </View>
                 {isSelected && (

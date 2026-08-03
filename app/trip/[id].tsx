@@ -1,10 +1,11 @@
-import Colors from '@/constants/Colors'
-import { PARKS } from '@/constants/parks'
-import { Trip, getTrip, updateTrip } from '@/services/trips'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useColorScheme } from 'nativewind'
-import { useEffect, useRef, useState } from 'react'
+import Colors from "@/constants/Colors";
+import { PARKS } from "@/constants/parks";
+import { formatShortDate } from "@/lib/utils";
+import { Trip, getTrip, updateTrip } from "@/services/trips";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router, useLocalSearchParams } from "expo-router";
+import { useColorScheme } from "nativewind";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -13,86 +14,90 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native'
+} from "react-native";
 
 export default function TripDetail() {
-  const { id, edit, from } = useLocalSearchParams<{ id: string, edit?: string, from?: string }>()
-  const [trip, setTrip] = useState<Trip | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { id, edit, from } = useLocalSearchParams<{
+    id: string;
+    edit?: string;
+    from?: string;
+  }>();
+  const [trip, setTrip] = useState<Trip | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [editVisible, setEditVisible] = useState(false)
-  const [editName, setEditName] = useState('')
-  const [editStartDate, setEditStartDate] = useState<Date | null>(null)
-  const [editEndDate, setEditEndDate] = useState<Date | null>(null)
-  const [editParks, setEditParks] = useState<string[]>([])
-  const [showStartPicker, setShowStartPicker] = useState(false)
-  const [showEndPicker, setShowEndPicker] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const editOpenedRef = useRef(false)
-  const { colorScheme } = useColorScheme()
-  const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
-  
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editStartDate, setEditStartDate] = useState<Date | null>(null);
+  const [editEndDate, setEditEndDate] = useState<Date | null>(null);
+  const [editParks, setEditParks] = useState<string[]>([]);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const editOpenedRef = useRef(false);
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+
   useEffect(() => {
     getTrip(id)
       .then(setTrip)
       .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [id])
+      .finally(() => setLoading(false));
+  }, [id]);
 
   useEffect(() => {
-    if (edit === 'true' && trip && !editOpenedRef.current) {
-      editOpenedRef.current = true
-      openEdit()
+    if (edit === "true" && trip && !editOpenedRef.current) {
+      editOpenedRef.current = true;
+      openEdit();
     }
-  }, [edit, trip])
+  }, [edit, trip]);
 
   const openEdit = () => {
-    if (!trip) return
-    setEditName(trip.name)
-    setEditStartDate(new Date(trip.startDate))
-    setEditEndDate(new Date(trip.endDate))
-    setEditParks(trip.parks)
-    setEditVisible(true)
-  }
+    if (!trip) return;
+    setEditName(trip.name);
+    setEditStartDate(new Date(trip.startDate));
+    setEditEndDate(new Date(trip.endDate));
+    setEditParks(trip.parks);
+    setEditVisible(true);
+  };
 
   const handleSave = async () => {
-    if (!editName || !editStartDate || !editEndDate) return
-    setSaving(true)
+    if (!editName || !editStartDate || !editEndDate) return;
+    setSaving(true);
     try {
       const updated = await updateTrip(id, {
         name: editName,
         startDate: editStartDate.toISOString(),
         endDate: editEndDate.toISOString(),
         parks: editParks,
-      })
-      setTrip(updated as unknown as Trip)
-      setEditVisible(false)
+      });
+      setTrip(updated as unknown as Trip);
+      setEditVisible(false);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const togglePark = (parkId: string) => {
-    setEditParks(prev =>
+    setEditParks((prev) =>
       prev.includes(parkId)
-        ? prev.filter(p => p !== parkId)
-        : [...prev, parkId]
-    )
-  }
+        ? prev.filter((p) => p !== parkId)
+        : [...prev, parkId],
+    );
+  };
 
   const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0]
-  }
+    return date.toISOString().split("T")[0];
+  };
 
   const goBack = () => {
-    if (from === 'profile') {
-      router.push('/(tabs)/profile')
+    if (from === "profile") {
+      router.push("/(tabs)/profile");
     } else {
-      router.push('/')
+      router.push("/");
     }
-  }
+  };
 
   const BackButton = () => (
     <TouchableOpacity
@@ -101,14 +106,14 @@ export default function TripDetail() {
     >
       <Text className="text-accent text-sm">← Back</Text>
     </TouchableOpacity>
-  )
+  );
 
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator color={theme.accent} />
       </View>
-    )
+    );
   }
 
   if (!trip) {
@@ -117,29 +122,31 @@ export default function TripDetail() {
         <BackButton />
         <Text className="text-text text-lg mt-6">Trip not found.</Text>
       </View>
-    )
+    );
   }
 
-  const tripParks = PARKS.filter(p => trip.parks.includes(p.id))
-  const tripResorts = [...new Set(tripParks.map(p => p.resort))]
+  const tripParks = PARKS.filter((p) => trip.parks.includes(p.id));
+  const tripResorts = [...new Set(tripParks.map((p) => p.resort))];
 
   const formatList = (items: string[]) => {
-    if (items.length === 1) return items[0]
-    if (items.length === 2) return `${items[0]} & ${items[1]}`
-    return `${items.slice(0, -1).join(', ')} & ${items[items.length - 1]}`
-  }
+    if (items.length === 1) return items[0];
+    if (items.length === 2) return `${items[0]} & ${items[1]}`;
+    return `${items.slice(0, -1).join(", ")} & ${items[items.length - 1]}`;
+  };
 
-  const resorts = PARKS.reduce((acc, park) => {
-    if (!acc[park.resort]) acc[park.resort] = []
-    acc[park.resort].push(park)
-    return acc
-  }, {} as Record<string, typeof PARKS[number][]>)
+  const resorts = PARKS.reduce(
+    (acc, park) => {
+      if (!acc[park.resort]) acc[park.resort] = [];
+      acc[park.resort].push(park);
+      return acc;
+    },
+    {} as Record<string, (typeof PARKS)[number][]>,
+  );
 
   return (
     <>
       <ScrollView className="flex-1 bg-background">
         <View className="px-6 pt-16 pb-8">
-
           {/* Back + Edit row */}
           <View className="flex-row justify-between items-center mb-6">
             <BackButton />
@@ -158,13 +165,15 @@ export default function TripDetail() {
 
           {/* Park chips */}
           <View className="flex-row flex-wrap gap-2 mt-3">
-            {tripParks.map(park => (
+            {tripParks.map((park) => (
               <View
                 key={park.id}
                 style={{ backgroundColor: park.color }}
                 className="px-3 py-1 rounded-full"
               >
-                <Text className="text-text text-xs font-semibold">{park.name}</Text>
+                <Text className="text-text text-xs font-semibold">
+                  {park.name}
+                </Text>
               </View>
             ))}
           </View>
@@ -173,10 +182,30 @@ export default function TripDetail() {
           <View className="bg-surface rounded-xl p-4 mt-6">
             <Text className="text-textSecondary text-xs mb-1">Dates</Text>
             <Text className="text-text font-semibold">
-              {trip.startDate.split('T')[0]} → {trip.endDate.split('T')[0]}
+              {formatShortDate(trip.startDate)} →{" "}
+              {formatShortDate(trip.endDate)}
             </Text>
           </View>
 
+          {/* Trip stats */}
+          <View className="flex-row justify-between bg-surface rounded-xl p-4 mt-4">
+            <View className="items-center">
+              <Text className="text-text text-lg font-bold">—</Text>
+              <Text className="text-textMuted text-xs mt-0.5">Snacks</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-text text-lg font-bold">—</Text>
+              <Text className="text-textMuted text-xs mt-0.5">Favourites</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-text text-lg font-bold">—</Text>
+              <Text className="text-textMuted text-xs mt-0.5">Most Ridden</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-text text-lg font-bold">—</Text>
+              <Text className="text-textMuted text-xs mt-0.5">Distance</Text>
+            </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -189,7 +218,6 @@ export default function TripDetail() {
       >
         <ScrollView className="flex-1 bg-background">
           <View className="px-6 pt-12 pb-8">
-
             {/* Modal header */}
             <View className="flex-row justify-between items-center mb-8">
               <TouchableOpacity onPress={() => setEditVisible(false)}>
@@ -197,15 +225,18 @@ export default function TripDetail() {
               </TouchableOpacity>
               <Text className="text-text font-bold text-base">Edit Trip</Text>
               <TouchableOpacity onPress={handleSave} disabled={saving}>
-                {saving
-                  ? <ActivityIndicator color={theme.accent} />
-                  : <Text className="text-accent font-semibold">Save</Text>
-                }
+                {saving ? (
+                  <ActivityIndicator color={theme.accent} />
+                ) : (
+                  <Text className="text-accent font-semibold">Save</Text>
+                )}
               </TouchableOpacity>
             </View>
 
             {/* Name */}
-            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Trip Name</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+              Trip Name
+            </Text>
             <TextInput
               className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
               placeholderTextColor={theme.textSecondary}
@@ -214,13 +245,17 @@ export default function TripDetail() {
             />
 
             {/* Start date */}
-            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Start Date</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+              Start Date
+            </Text>
             <TouchableOpacity
               className="bg-surface rounded-xl px-4 py-4 mb-2"
               onPress={() => setShowStartPicker(true)}
             >
-              <Text className={editStartDate ? 'text-text' : 'text-textSecondary'}>
-                {editStartDate ? formatDate(editStartDate) : 'YYYY-MM-DD'}
+              <Text
+                className={editStartDate ? "text-text" : "text-textSecondary"}
+              >
+                {editStartDate ? formatDate(editStartDate) : "YYYY-MM-DD"}
               </Text>
             </TouchableOpacity>
             {showStartPicker && (
@@ -237,20 +272,24 @@ export default function TripDetail() {
                   display="spinner"
                   minimumDate={new Date()}
                   onChange={(event, date) => {
-                    if (date) setEditStartDate(date)
+                    if (date) setEditStartDate(date);
                   }}
                 />
               </View>
             )}
 
             {/* End date */}
-            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">End Date</Text>
+            <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+              End Date
+            </Text>
             <TouchableOpacity
               className="bg-surface rounded-xl px-4 py-4 mb-2"
               onPress={() => setShowEndPicker(true)}
             >
-              <Text className={editEndDate ? 'text-text' : 'text-textSecondary'}>
-                {editEndDate ? formatDate(editEndDate) : 'YYYY-MM-DD'}
+              <Text
+                className={editEndDate ? "text-text" : "text-textSecondary"}
+              >
+                {editEndDate ? formatDate(editEndDate) : "YYYY-MM-DD"}
               </Text>
             </TouchableOpacity>
             {showEndPicker && (
@@ -267,24 +306,28 @@ export default function TripDetail() {
                   display="spinner"
                   minimumDate={editStartDate ?? new Date()}
                   onChange={(event, date) => {
-                    if (date) setEditEndDate(date)
+                    if (date) setEditEndDate(date);
                   }}
                 />
               </View>
             )}
 
             {/* Parks */}
-            <Text className="text-textSecondary text-xs mb-4 uppercase tracking-wider">Parks</Text>
+            <Text className="text-textSecondary text-xs mb-4 uppercase tracking-wider">
+              Parks
+            </Text>
             {Object.entries(resorts).map(([resort, parks]) => (
               <View key={resort} className="mb-6">
-                <Text className="text-textSecondary text-xs mb-3">{resort}</Text>
-                {parks.map(park => (
+                <Text className="text-textSecondary text-xs mb-3">
+                  {resort}
+                </Text>
+                {parks.map((park) => (
                   <TouchableOpacity
                     key={park.id}
                     style={{
                       backgroundColor: editParks.includes(park.id)
                         ? theme.elevated
-                        : theme.surface
+                        : theme.surface,
                     }}
                     className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
                     onPress={() => togglePark(park.id)}
@@ -297,16 +340,20 @@ export default function TripDetail() {
                       <Text className="text-text text-sm">{park.name}</Text>
                     </View>
                     {editParks.includes(park.id) && (
-                      <Text style={{ color: park.color }} className="text-sm font-bold">✓</Text>
+                      <Text
+                        style={{ color: park.color }}
+                        className="text-sm font-bold"
+                      >
+                        ✓
+                      </Text>
                     )}
                   </TouchableOpacity>
                 ))}
               </View>
             ))}
-
           </View>
         </ScrollView>
       </Modal>
     </>
-  )
+  );
 }
