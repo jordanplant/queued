@@ -1,36 +1,36 @@
-import AppSplashScreen from '@/components/AppSplashScreen'
-import { AuthProvider, useAuth } from '@/context/AuthContext'
-import FontAwesome from '@expo/vector-icons/FontAwesome'
-import { useFonts } from 'expo-font'
-import { Slot } from 'expo-router'
-import * as SplashScreen from 'expo-splash-screen'
-import { useEffect, useState } from 'react'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import 'react-native-reanimated'
-import 'react-native-url-polyfill/auto'
-import '../global.css'
+import AppSplashScreen from "@/components/AppSplashScreen";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFonts } from "expo-font";
+import { Slot } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-reanimated";
+import "react-native-url-polyfill/auto";
+import "../global.css";
 
-SplashScreen.preventAutoHideAsync()
+SplashScreen.preventAutoHideAsync();
 
 function RootLayoutInner() {
-  const { loading: authLoading } = useAuth()
-  const [splashVisible, setSplashVisible] = useState(true)
+  const { loading: authLoading } = useAuth();
+  const [splashVisible, setSplashVisible] = useState(true);
   const [fontsLoaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
-  })
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    ...Ionicons.font,
+  });
 
   useEffect(() => {
-    if (error) throw error
-  }, [error])
+    if (error) throw error;
+  }, [error]);
 
   useEffect(() => {
     if (fontsLoaded && !authLoading) {
-      SplashScreen.hideAsync()
+      SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, authLoading])
+  }, [fontsLoaded, authLoading]);
 
-  if (!fontsLoaded) return null
+  if (!fontsLoaded) return null;
 
   return (
     <>
@@ -39,7 +39,7 @@ function RootLayoutInner() {
         <AppSplashScreen onFadeComplete={() => setSplashVisible(false)} />
       )}
     </>
-  )
+  );
 }
 
 export default function RootLayout() {
@@ -49,5 +49,5 @@ export default function RootLayout() {
         <RootLayoutInner />
       </AuthProvider>
     </GestureHandlerRootView>
-  )
+  );
 }

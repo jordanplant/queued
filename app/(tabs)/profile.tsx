@@ -55,6 +55,15 @@ export default function Profile() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
+  // Maps Appwrite user labels to a visible badge. Labels not listed here
+  // (e.g. internal/logic-only labels) simply won't render a pill.
+  const labelConfig: Record<
+    string,
+    { text: string; bg: string; color: string }
+  > = {
+    admin: { text: "Admin", bg: "bg-accent/20", color: theme.accent },
+  };
+
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripsLoading, setTripsLoading] = useState(true);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -189,6 +198,28 @@ export default function Profile() {
             </View>
             <View>
               <Text className="text-text text-xl font-bold">{user?.name}</Text>
+              {user?.labels?.some((label) => labelConfig[label]) && (
+                <View className="flex-row items-center gap-2 flex-wrap mt-1">
+                  {user.labels
+                    .filter((label) => labelConfig[label])
+                    .map((label) => {
+                      const config = labelConfig[label];
+                      return (
+                        <View
+                          key={label}
+                          className={`px-2 py-1 rounded-full ${config.bg}`}
+                        >
+                          <Text
+                            className="text-xs font-medium"
+                            style={{ color: config.color }}
+                          >
+                            {config.text}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                </View>
+              )}
             </View>
           </View>
 

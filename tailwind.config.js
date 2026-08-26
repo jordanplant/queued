@@ -4,24 +4,24 @@ module.exports = {
     "./app/**/*.{js,jsx,ts,tsx}",
     "./app/(auth)/**/*.{js,jsx,ts,tsx}",
     "./app/(tabs)/**/*.{js,jsx,ts,tsx}",
-    "./components/**/*.{js,jsx,ts,tsx}"
+    "./components/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        background: 'var(--background)',
-        surface: 'var(--surface)',
-        elevated: 'var(--elevated)',
-        accent: 'var(--accent)',
-        text: 'var(--text)',
-        textSecondary: 'var(--text-secondary)',
-        textMuted: 'var(--text-muted)',
-        border: 'var(--border)',
+        background: "var(--background)",
+        surface: "var(--surface)",
+        elevated: "var(--elevated)",
+        accent: "rgb(var(--accent) / <alpha-value>)",
+        text: "var(--text)",
+        textSecondary: "var(--text-secondary)",
+        textMuted: "var(--text-muted)",
+        border: "var(--border)",
         parks: {
           // Walt Disney World
           "magic-kingdom": "#3B82F6",
-          "epcot": "#A855F7",
+          epcot: "#A855F7",
           "hollywood-studios": "#F59E0B",
           "animal-kingdom": "#22C55E",
           // Disneyland
