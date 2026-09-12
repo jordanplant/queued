@@ -1,4 +1,4 @@
-# QD — Queued
+## QD — Queued
 
 > Your theme park day, sorted.
 
@@ -7,6 +7,18 @@ A personal React Native app for planning and tracking theme park trips. Built fo
 ---
 
 ## Changelog
+
+### v0.5.3
+
+- Quick date presets (+7 / +10 / +14 nights) when creating a trip — requires Start Date first, manual entry still available
+- End Date auto-clears if a Start Date change makes it invalid
+- Clock Format, Temperature, and Date Format settings now persist to the user's Appwrite account (`prefs`) and load on login
+- Clock Format applied across Wait Times (attraction/show times, park hours, last updated), Itinerary (block/event times, timeline ruler), and Weather (sunset, forecast slots)
+- Temperature applied to Weather — client-side conversion to °F for display, including wind speed to mph; unit letter now shown alongside every temperature
+- Date Format applied to trip date displays across Trip Detail, Today, and Profile
+- `formatClockTime`, `convertTemp`, and `convertWindSpeed` helpers added to `lib/utils.ts`
+- Delete button added to the itinerary block/event edit modal, alongside the existing long-press delete
+- Fixed deprecated `DateTimePicker` `onChange` warning — switched to `onValueChange`
 
 ### v0.5
 
