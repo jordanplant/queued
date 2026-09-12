@@ -388,8 +388,15 @@ export default function Profile() {
 
                           {/* Dates */}
                           <Text className="text-textSecondary text-sm">
-                            {formatShortDate(trip.startDate)} →{" "}
-                            {formatShortDate(trip.endDate)}
+                            {formatShortDate(
+                              trip.startDate,
+                              user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+                            )}{" "}
+                            →{" "}
+                            {formatShortDate(
+                              trip.endDate,
+                              user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+                            )}
                           </Text>
                         </View>
                       )}

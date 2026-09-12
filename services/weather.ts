@@ -1,6 +1,13 @@
 const API_KEY = process.env.EXPO_PUBLIC_OPENWEATHER_API_KEY!;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
+import {
+  ClockFormat,
+  TempUnit,
+  convertTemp,
+  convertWindSpeed,
+} from "@/lib/utils";
+
 export type WeatherCondition = {
   temp: number;
   feelsLike: number;
@@ -37,11 +44,15 @@ export type DayForecast = {
   icon: string;
 };
 
-const formatUnixTime = (unix: number, timezone: string): string =>
+const formatUnixTime = (
+  unix: number,
+  timezone: string,
+  clockFormat: ClockFormat,
+): string =>
   new Date(unix * 1000).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: false,
+    hour12: clockFormat === "12hr",
     timeZone: timezone,
   });
 
@@ -71,10 +82,12 @@ const shapeSlot = (
   slot: any,
   label: NamedSlot["label"],
   timezone: string,
+  clockFormat: ClockFormat,
+  tempUnit: TempUnit,
 ): NamedSlot => ({
   label,
-  time: formatUnixTime(slot.dt, timezone),
-  temp: Math.round(slot.main.temp),
+  time: formatUnixTime(slot.dt, timezone, clockFormat),
+  temp: convertTemp(slot.main.temp, tempUnit),
   description: slot.weather[0].description,
   icon: slot.weather[0].icon,
   rainChance: Math.round((slot.pop ?? 0) * 100),
@@ -84,6 +97,8 @@ export const fetchWeather = async (
   lat: number,
   lng: number,
   timezone: string,
+  clockFormat: ClockFormat,
+  tempUnit: TempUnit,
 ): Promise<WeatherData> => {
   const [currentRes, forecastRes] = await Promise.all([
     fetch(
@@ -153,24 +168,48 @@ export const fetchWeather = async (
   if (slots.length > 0 && parkTotalMinutes < 21 * 60) {
     // AM — hide after 12:00 park time
     if (parkTotalMinutes < 12 * 60) {
-      namedSlots.push(shapeSlot(pickSlot(slots, 9, timezone), "AM", timezone));
+      namedSlots.push(
+        shapeSlot(
+          pickSlot(slots, 9, timezone),
+          "AM",
+          timezone,
+          clockFormat,
+          tempUnit,
+        ),
+      );
     }
 
     // Midday — hide after 15:00 park time
     if (parkTotalMinutes < 15 * 60) {
       namedSlots.push(
-        shapeSlot(pickSlot(slots, 12, timezone), "Midday", timezone),
+        shapeSlot(
+          pickSlot(slots, 12, timezone),
+          "Midday",
+          timezone,
+          clockFormat,
+          tempUnit,
+        ),
       );
     }
 
     // Peak — hide 30 mins after peak slot time
     if (peakSlot && now < peakSlotExpiry) {
-      namedSlots.push(shapeSlot(peakSlot, "Peak", timezone));
+      namedSlots.push(
+        shapeSlot(peakSlot, "Peak", timezone, clockFormat, tempUnit),
+      );
     }
 
     // PM — hide after 21:00 park time, and only if other slots exist
     if (parkTotalMinutes < 21 * 60 && namedSlots.length > 0) {
-      namedSlots.push(shapeSlot(pickSlot(slots, 18, timezone), "PM", timezone));
+      namedSlots.push(
+        shapeSlot(
+          pickSlot(slots, 18, timezone),
+          "PM",
+          timezone,
+          clockFormat,
+          tempUnit,
+        ),
+      );
     }
   }
 
@@ -178,21 +217,21 @@ export const fetchWeather = async (
 
   return {
     current: {
-      temp: Math.round(current.main.temp),
-      feelsLike: Math.round(current.main.feels_like),
+      temp: convertTemp(current.main.temp, tempUnit),
+      feelsLike: convertTemp(current.main.feels_like, tempUnit),
       description: current.weather[0].description,
       icon: current.weather[0].icon,
       humidity: current.main.humidity,
-      windSpeed: Math.round(current.wind.speed),
+      windSpeed: convertWindSpeed(current.wind.speed, tempUnit),
     },
     slots: namedSlots,
     high: dayTemps.length
-      ? Math.round(Math.max(...dayTemps))
-      : Math.round(current.main.temp),
+      ? convertTemp(Math.max(...dayTemps), tempUnit)
+      : convertTemp(current.main.temp, tempUnit),
     low: dayTemps.length
-      ? Math.round(Math.min(...dayTemps))
-      : Math.round(current.main.temp),
-    sunset: formatUnixTime(current.sys.sunset, timezone),
+      ? convertTemp(Math.min(...dayTemps), tempUnit)
+      : convertTemp(current.main.temp, tempUnit),
+    sunset: formatUnixTime(current.sys.sunset, timezone, clockFormat),
     nextRain: nextRainSlot
       ? { time: nextRainSlot.time, chance: nextRainSlot.rainChance }
       : null,
@@ -203,6 +242,7 @@ export const fetchDayForecast = async (
   lat: number,
   lng: number,
   startDate: string,
+  tempUnit: TempUnit,
   days: number = 5,
 ): Promise<DayForecast[]> => {
   const res = await fetch(
@@ -234,8 +274,8 @@ export const fetchDayForecast = async (
 
       return {
         date,
-        high: Math.round(Math.max(...temps)),
-        low: Math.round(Math.min(...temps)),
+        high: convertTemp(Math.max(...temps), tempUnit),
+        low: convertTemp(Math.min(...temps), tempUnit),
         rainChance: maxRain,
         description: midSlot.weather[0].description,
         icon: midSlot.weather[0].icon,

@@ -4,6 +4,7 @@ import { PARKS } from "@/constants/parks";
 import { useAuth } from "@/context/AuthContext";
 import { useFavourites } from "@/hooks/useFavourites";
 import { haptic } from "@/lib/haptics";
+import { formatClockTime } from "@/lib/utils";
 import {
   LiveAttraction,
   LiveCharacterMeet,
@@ -31,16 +32,6 @@ import {
 type ParkOption = (typeof PARKS)[number];
 type DataTab = "attractions" | "shows" | "characters";
 
-const formatTime = (iso: string) => {
-  if (!iso) return "";
-  const timePart = iso.includes("T") ? iso.split("T")[1] : iso;
-  const [hourStr, minuteStr] = timePart.split(":");
-  const hour = parseInt(hourStr, 10);
-  const minute = minuteStr.padStart(2, "0");
-  const period = hour >= 12 ? "pm" : "am";
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${hour12}:${minute} ${period}`;
-};
 export default function WaitTimes() {
   const { user, currentTrip } = useAuth();
 
@@ -68,6 +59,15 @@ export default function WaitTimes() {
 
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+
+  const formatTime = (iso: string) => {
+    if (!iso) return "";
+    const timePart = iso.includes("T") ? iso.split("T")[1] : iso;
+    const [hourStr, minuteStr] = timePart.split(":");
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+    return formatClockTime(hour, minute, user?.prefs?.clockFormat ?? "24hr");
+  };
 
   useEffect(() => {
     if (!currentTrip) {

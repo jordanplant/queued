@@ -70,7 +70,13 @@ export default function Today() {
     setWeatherLoading(true);
 
     if (isActive) {
-      fetchWeather(coords.lat, coords.lng, coords.timezone)
+      fetchWeather(
+        coords.lat,
+        coords.lng,
+        coords.timezone,
+        user?.prefs?.clockFormat ?? "24hr",
+        user?.prefs?.tempUnit ?? "C",
+      )
         .then(setWeather)
         .catch(console.error)
         .finally(() => {
@@ -96,6 +102,7 @@ export default function Today() {
           coords.lat,
           coords.lng,
           toDateOnly(currentTrip.startDate),
+          user?.prefs?.tempUnit ?? "C",
           Math.min(tripLength, 5),
         )
           .then(setDayForecast)
@@ -190,8 +197,15 @@ export default function Today() {
                     {trip.name}
                   </Text>
                   <Text className="text-textMuted text-xs mt-0.5">
-                    {formatShortDate(trip.startDate)} →{" "}
-                    {formatShortDate(trip.endDate)}
+                    {formatShortDate(
+                      trip.startDate,
+                      user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+                    )}{" "}
+                    →{" "}
+                    {formatShortDate(
+                      trip.endDate,
+                      user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+                    )}
                   </Text>
                 </View>
                 {isSelected && (
@@ -240,7 +254,12 @@ export default function Today() {
               <ActivityIndicator color={theme.accent} />
             </View>
           )}
-          {weather && !weatherLoading && <WeatherCard weather={weather} />}
+          {weather && !weatherLoading && (
+            <WeatherCard
+              weather={weather}
+              tempUnit={user?.prefs?.tempUnit ?? "C"}
+            />
+          )}
         </View>
       </ScrollView>
     );
@@ -271,7 +290,10 @@ export default function Today() {
           </View>
         )}
         {dayForecast.length > 2 && !weatherLoading && (
-          <DayForecastCard forecasts={dayForecast} />
+          <DayForecastCard
+            forecasts={dayForecast}
+            tempUnit={user?.prefs?.tempUnit ?? "C"}
+          />
         )}
       </View>
     </ScrollView>

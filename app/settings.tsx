@@ -1,5 +1,6 @@
 import Colors from "@/constants/Colors";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserPrefs } from "@/context/AuthContext";
+import { updatePrefs } from "@/lib/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -8,6 +9,7 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 type ClockFormat = "12hr" | "24hr";
 type TempUnit = "C" | "F";
+type DateFormat = "DD/MM/YYYY" | "MM/DD/YYYY";
 
 const SettingRow = ({
   label,
@@ -76,17 +78,32 @@ export default function Settings() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
-  const [clockFormat, setClockFormat] = useState<ClockFormat>("24hr");
-  const [tempUnit, setTempUnit] = useState<TempUnit>("C");
-
-  const [dateFormat, setDateFormat] = useState<"DD/MM/YYYY" | "MM/DD/YYYY">(
-    "DD/MM/YYYY",
+  const [clockFormat, setClockFormat] = useState<ClockFormat>(
+    user?.prefs?.clockFormat ?? "24hr",
   );
+  const [tempUnit, setTempUnit] = useState<TempUnit>(
+    user?.prefs?.tempUnit ?? "C",
+  );
+  const [dateFormat, setDateFormat] = useState<DateFormat>(
+    user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+  );
+  const [error, setError] = useState("");
+
+  const savePref = async (changed: Partial<UserPrefs>) => {
+    if (!user) return;
+    const newPrefs = { ...user.prefs, ...changed };
+    try {
+      await updatePrefs(newPrefs);
+      setUser({ ...user, prefs: newPrefs });
+      setError("");
+    } catch (e: any) {
+      setError("Couldn't save — check your connection");
+    }
+  };
 
   return (
     <ScrollView className="flex-1 bg-background">
       <View className="px-6 pt-16 pb-8">
-        {/* Header */}
         <View className="flex-row items-center gap-3 mb-8">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -97,7 +114,10 @@ export default function Settings() {
           <Text className="text-text text-2xl font-bold">Settings</Text>
         </View>
 
-        {/* Preferences section */}
+        {error ? (
+          <Text className="text-red-400 text-sm mb-4">{error}</Text>
+        ) : null}
+
         <Text className="text-textMuted text-xs uppercase tracking-widest mb-2">
           Preferences
         </Text>
@@ -109,7 +129,11 @@ export default function Settings() {
             <SegmentControl
               options={["24hr", "12hr"]}
               selected={clockFormat}
-              onSelect={(val) => setClockFormat(val as ClockFormat)}
+              onSelect={(val) => {
+                const next = val as ClockFormat;
+                setClockFormat(next);
+                savePref({ clockFormat: next });
+              }}
               color={theme.accent}
             />
           </SettingRow>
@@ -117,7 +141,11 @@ export default function Settings() {
             <SegmentControl
               options={["°C", "°F"]}
               selected={tempUnit === "C" ? "°C" : "°F"}
-              onSelect={(val) => setTempUnit(val === "°C" ? "C" : "F")}
+              onSelect={(val) => {
+                const next = val === "°C" ? "C" : "F";
+                setTempUnit(next);
+                savePref({ tempUnit: next });
+              }}
               color={theme.accent}
             />
           </SettingRow>
@@ -125,15 +153,16 @@ export default function Settings() {
             <SegmentControl
               options={["DD/MM", "MM/DD"]}
               selected={dateFormat === "DD/MM/YYYY" ? "DD/MM" : "MM/DD"}
-              onSelect={(val) =>
-                setDateFormat(val === "DD/MM" ? "DD/MM/YYYY" : "MM/DD/YYYY")
-              }
+              onSelect={(val) => {
+                const next = val === "DD/MM" ? "DD/MM/YYYY" : "MM/DD/YYYY";
+                setDateFormat(next);
+                savePref({ dateFormat: next });
+              }}
               color={theme.accent}
             />
           </SettingRow>
         </View>
 
-        {/* Account section */}
         <Text className="text-textMuted text-xs uppercase tracking-widest mb-2">
           Account
         </Text>

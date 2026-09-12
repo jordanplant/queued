@@ -2,11 +2,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { Trip, getTrips } from "@/services/trips";
 import { createContext, useContext, useEffect, useState } from "react";
 
+export type UserPrefs = {
+  clockFormat?: "12hr" | "24hr";
+  tempUnit?: "C" | "F";
+  dateFormat?: "DD/MM/YYYY" | "MM/DD/YYYY";
+};
+
 type User = {
   $id: string;
   name: string;
   email: string;
   labels: string[];
+  prefs: UserPrefs;
 } | null;
 
 type AuthContextType = {

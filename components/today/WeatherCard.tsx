@@ -1,4 +1,5 @@
 import Colors from "@/constants/Colors";
+import { TempUnit } from "@/lib/utils";
 import { WeatherData } from "@/services/weather";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
@@ -36,9 +37,16 @@ const colorFromWeather = (icon: string): string => {
   return map[code] ?? "#9BA3B8";
 };
 
-export default function WeatherCard({ weather }: { weather: WeatherData }) {
+export default function WeatherCard({
+  weather,
+  tempUnit,
+}: {
+  weather: WeatherData;
+  tempUnit: TempUnit;
+}) {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
+  const windUnit = tempUnit === "F" ? "mph" : "m/s";
 
   return (
     <View className="bg-surface rounded-2xl p-5">
@@ -56,7 +64,7 @@ export default function WeatherCard({ weather }: { weather: WeatherData }) {
           />
           <View>
             <Text className="text-text text-5xl font-bold">
-              {weather.current.temp}°
+              {weather.current.temp}°{tempUnit}
             </Text>
             {weather.nextRain ? (
               <Text className="text-accent text-sm mt-1">
@@ -68,10 +76,10 @@ export default function WeatherCard({ weather }: { weather: WeatherData }) {
               </Text>
             )}
             <Text className="text-text text-sm font-semibold mt-1">
-              Feels like {weather.current.feelsLike}°
+              Feels like {weather.current.feelsLike}°{tempUnit}
               <Text className="text-textMuted text-xs">
                 {" "}
-                · H:{weather.high}° L:{weather.low}°
+                · H:{weather.high}°{tempUnit} L:{weather.low}°{tempUnit}
               </Text>
             </Text>
           </View>
@@ -90,7 +98,7 @@ export default function WeatherCard({ weather }: { weather: WeatherData }) {
           <View className="flex-row items-center gap-1">
             <Feather name="wind" size={14} color={theme.textSecondary} />
             <Text className="text-textSecondary text-sm">
-              {weather.current.windSpeed} m/s
+              {weather.current.windSpeed} {windUnit}
             </Text>
           </View>
           <View className="flex-row items-center gap-1">
@@ -122,7 +130,7 @@ export default function WeatherCard({ weather }: { weather: WeatherData }) {
                 color={colorFromWeather(slot.icon)}
               />
               <Text className="text-text text-sm font-semibold mt-1">
-                {slot.temp}°
+                {slot.temp}°{tempUnit}
               </Text>
               {slot.rainChance > 0 && (
                 <Text className="text-accent text-xs mt-1">

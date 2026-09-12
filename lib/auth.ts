@@ -36,3 +36,7 @@ export const resetPassword = async (
 ) => {
   return account.updateRecovery(userId, secret, password);
 };
+
+export const updatePrefs = async (prefs: Record<string, any>) => {
+  return account.updatePrefs({ prefs });
+};

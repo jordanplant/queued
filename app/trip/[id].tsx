@@ -1,5 +1,6 @@
 import Colors from "@/constants/Colors";
 import { PARKS } from "@/constants/parks";
+import { useAuth } from "@/context/AuthContext";
 import { formatShortDate } from "@/lib/utils";
 import { Trip, getTrip, updateTrip } from "@/services/trips";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -17,6 +18,7 @@ import {
 } from "react-native";
 
 export default function TripDetail() {
+  const { user } = useAuth();
   const { id, edit, from } = useLocalSearchParams<{
     id: string;
     edit?: string;
@@ -182,8 +184,15 @@ export default function TripDetail() {
           <View className="bg-surface rounded-xl p-4 mt-6">
             <Text className="text-textSecondary text-xs mb-1">Dates</Text>
             <Text className="text-text font-semibold">
-              {formatShortDate(trip.startDate)} →{" "}
-              {formatShortDate(trip.endDate)}
+              {formatShortDate(
+                trip.startDate,
+                user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+              )}{" "}
+              →{" "}
+              {formatShortDate(
+                trip.endDate,
+                user?.prefs?.dateFormat ?? "DD/MM/YYYY",
+              )}
             </Text>
           </View>
 

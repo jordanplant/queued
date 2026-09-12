@@ -1,56 +1,71 @@
-import Colors from '@/constants/Colors'
-import { PARKS } from '@/constants/parks'
-import { useAuth } from '@/context/AuthContext'
-import { createTrip } from '@/services/trips'
-import DateTimePicker from '@react-native-community/datetimepicker'
-import { router, useLocalSearchParams } from 'expo-router'
-import { useColorScheme } from 'nativewind'
-import { useState } from 'react'
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import Colors from "@/constants/Colors";
+import { PARKS } from "@/constants/parks";
+import { useAuth } from "@/context/AuthContext";
+import { createTrip } from "@/services/trips";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { router, useLocalSearchParams } from "expo-router";
+import { useColorScheme } from "nativewind";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+const NIGHTS_PRESETS = [7, 10, 14];
+
+const addNights = (date: Date, nights: number) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + nights);
+  return result;
+};
 
 export default function NewTrip() {
-  const { user } = useAuth()
-  const { from } = useLocalSearchParams<{ from?: string }>()
-  const [name, setName] = useState('')
-  const [startDate, setStartDate] = useState<Date | null>(null)
-  const [endDate, setEndDate] = useState<Date | null>(null)
-  const [showStartPicker, setShowStartPicker] = useState(false)
-  const [showEndPicker, setShowEndPicker] = useState(false)
-  const [selectedParks, setSelectedParks] = useState<string[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const { colorScheme } = useColorScheme()
-const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
+  const { user } = useAuth();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const [name, setName] = useState("");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [selectedParks, setSelectedParks] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? Colors.dark : Colors.light;
 
   const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0]
-  }
+    return date.toISOString().split("T")[0];
+  };
 
   const goBack = () => {
-    if (from === 'profile') {
-      router.replace('/(tabs)/profile')
+    if (from === "profile") {
+      router.replace("/(tabs)/profile");
     } else {
-      router.replace('/')
+      router.replace("/");
     }
-  }
+  };
 
   const togglePark = (parkId: string) => {
-    setSelectedParks(prev =>
+    setSelectedParks((prev) =>
       prev.includes(parkId)
-        ? prev.filter(p => p !== parkId)
-        : [...prev, parkId]
-    )
-  }
+        ? prev.filter((p) => p !== parkId)
+        : [...prev, parkId],
+    );
+  };
 
   const handleCreate = async () => {
     if (!name || !startDate || !endDate) {
-      setError('Please fill in all fields')
-      return
+      setError("Please fill in all fields");
+      return;
     }
-    if (!user) return
+    if (!user) return;
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       await createTrip({
@@ -58,27 +73,29 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         parks: selectedParks,
-        status: 'upcoming',
+        status: "upcoming",
         userId: user.$id,
-      })
-      goBack()
+      });
+      goBack();
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const resorts = PARKS.reduce((acc, park) => {
-    if (!acc[park.resort]) acc[park.resort] = []
-    acc[park.resort].push(park)
-    return acc
-  }, {} as Record<string, typeof PARKS[number][]>)
+  const resorts = PARKS.reduce(
+    (acc, park) => {
+      if (!acc[park.resort]) acc[park.resort] = [];
+      acc[park.resort].push(park);
+      return acc;
+    },
+    {} as Record<string, (typeof PARKS)[number][]>,
+  );
 
   return (
     <ScrollView className="flex-1 bg-background">
       <View className="px-6 pt-16 pb-8">
-
         <TouchableOpacity
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           onPress={goBack}
@@ -88,13 +105,17 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
         </TouchableOpacity>
 
         <Text className="text-text text-2xl font-bold mb-2">New Trip</Text>
-        <Text className="text-textSecondary text-sm mb-8">Plan your next adventure</Text>
+        <Text className="text-textSecondary text-sm mb-8">
+          Plan your next adventure
+        </Text>
 
         {error ? (
           <Text className="text-red-400 text-sm mb-4">{error}</Text>
         ) : null}
 
-        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Trip Name</Text>
+        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+          Trip Name
+        </Text>
         <TextInput
           className="bg-surface text-text rounded-xl px-4 py-4 mb-6"
           placeholder="e.g. Florida 2026"
@@ -103,13 +124,15 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
           onChangeText={setName}
         />
 
-        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">Start Date</Text>
+        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+          Start Date
+        </Text>
         <TouchableOpacity
           className="bg-surface rounded-xl px-4 py-4 mb-2"
           onPress={() => setShowStartPicker(true)}
         >
-          <Text className={startDate ? 'text-text' : 'text-textSecondary'}>
-            {startDate ? formatDate(startDate) : 'YYYY-MM-DD'}
+          <Text className={startDate ? "text-text" : "text-textSecondary"}>
+            {startDate ? formatDate(startDate) : "YYYY-MM-DD"}
           </Text>
         </TouchableOpacity>
         {showStartPicker && (
@@ -125,20 +148,49 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
               mode="date"
               display="spinner"
               minimumDate={new Date()}
-              onChange={(event, date) => {
-                if (date) setStartDate(date)
+              onValueChange={(event, date) => {
+                if (date) {
+                  setStartDate(date);
+                  if (endDate && endDate <= date) {
+                    setEndDate(null);
+                  }
+                }
               }}
             />
           </View>
         )}
 
-        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">End Date</Text>
+        <Text className="text-textSecondary text-xs mb-2 uppercase tracking-wider">
+          End Date
+        </Text>
+
+        <View className="flex-row gap-2 mb-3">
+          {NIGHTS_PRESETS.map((n) => (
+            <TouchableOpacity
+              key={n}
+              disabled={!startDate}
+              onPress={() => setEndDate(addNights(startDate!, n))}
+              className="flex-1 rounded-xl py-3 items-center"
+              style={{
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.accent,
+                opacity: startDate ? 1 : 0.4,
+              }}
+            >
+              <Text className="text-text text-sm font-semibold">
+                +{n} nights
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <TouchableOpacity
           className="bg-surface rounded-xl px-4 py-4 mb-2"
           onPress={() => setShowEndPicker(true)}
         >
-          <Text className={endDate ? 'text-text' : 'text-textSecondary'}>
-            {endDate ? formatDate(endDate) : 'YYYY-MM-DD'}
+          <Text className={endDate ? "text-text" : "text-textSecondary"}>
+            {endDate ? formatDate(endDate) : "YYYY-MM-DD"}
           </Text>
         </TouchableOpacity>
         {showEndPicker && (
@@ -154,25 +206,27 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
               mode="date"
               display="spinner"
               minimumDate={startDate ?? new Date()}
-              onChange={(event, date) => {
-                if (date) setEndDate(date)
+              onValueChange={(event, date) => {
+                if (date) setEndDate(date);
               }}
             />
           </View>
         )}
 
-        <Text className="text-textSecondary text-xs mb-4 uppercase tracking-wider">Parks</Text>
+        <Text className="text-textSecondary text-xs mb-4 uppercase tracking-wider">
+          Parks
+        </Text>
 
         {Object.entries(resorts).map(([resort, parks]) => (
           <View key={resort} className="mb-6">
             <Text className="text-textSecondary text-xs mb-3">{resort}</Text>
-            {parks.map(park => (
+            {parks.map((park) => (
               <TouchableOpacity
                 key={park.id}
                 style={{
                   backgroundColor: selectedParks.includes(park.id)
                     ? theme.elevated
-                    : theme.surface
+                    : theme.surface,
                 }}
                 className="flex-row items-center justify-between rounded-xl px-4 py-3 mb-2"
                 onPress={() => togglePark(park.id)}
@@ -185,7 +239,12 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
                   <Text className="text-text text-sm">{park.name}</Text>
                 </View>
                 {selectedParks.includes(park.id) && (
-                  <Text style={{ color: park.color }} className="text-sm font-bold">✓</Text>
+                  <Text
+                    style={{ color: park.color }}
+                    className="text-sm font-bold"
+                  >
+                    ✓
+                  </Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -197,13 +256,15 @@ const theme = colorScheme === 'dark' ? Colors.dark : Colors.light
           onPress={handleCreate}
           disabled={loading}
         >
-          {loading
-            ? <ActivityIndicator color={theme.background} />
-            : <Text className="text-background font-bold text-base">Create Trip</Text>
-          }
+          {loading ? (
+            <ActivityIndicator color={theme.background} />
+          ) : (
+            <Text className="text-background font-bold text-base">
+              Create Trip
+            </Text>
+          )}
         </TouchableOpacity>
-
       </View>
     </ScrollView>
-  )
+  );
 }

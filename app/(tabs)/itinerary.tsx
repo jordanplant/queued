@@ -2,10 +2,11 @@ import Colors from "@/constants/Colors";
 import { PARKS } from "@/constants/parks";
 import { useAuth } from "@/context/AuthContext";
 import { useItinerary } from "@/hooks/useItinerary";
+import { formatClockTime } from "@/lib/utils";
 import { ItineraryItem } from "@/services/itinerary";
 import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -55,22 +56,9 @@ const blockStartTime = (duration: string): number => {
   }
 };
 
-const formatTime = (minutes: number) => {
-  const h = String(Math.floor(minutes / 60)).padStart(2, "0");
-  const m = String(minutes % 60).padStart(2, "0");
-  return `${h}:${m}`;
-};
-
-const formatHourLabel = (hour: number) => {
-  if (hour === 0) return "12am";
-  if (hour < 12) return `${hour}am`;
-  if (hour === 12) return "12pm";
-  return `${hour - 12}pm`;
-};
-
 const getOverlapRegions = (
   blocks: { time: number; endTime?: number }[],
-  timelineStart: number
+  timelineStart: number,
 ) => {
   const regions: { top: number; height: number }[] = [];
   for (let i = 0; i < blocks.length; i++) {
@@ -105,7 +93,7 @@ const findConflict = (
   blocks: ItineraryItem[],
   newStart: number,
   newEnd: number,
-  excludeId?: string
+  excludeId?: string,
 ): ConflictResult => {
   for (const block of blocks) {
     if (excludeId && block.$id === excludeId) continue;
@@ -201,6 +189,23 @@ export default function ItineraryScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
 
+  const formatTime = (minutes: number) => {
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    return formatClockTime(hour, minute, user?.prefs?.clockFormat ?? "24hr");
+  };
+
+  const formatHourLabel = (hour: number) => {
+    const clockFormat = user?.prefs?.clockFormat ?? "24hr";
+    if (clockFormat === "24hr") {
+      return `${String(hour).padStart(2, "0")}:00`;
+    }
+    if (hour === 0) return "12am";
+    if (hour < 12) return `${hour}am`;
+    if (hour === 12) return "12pm";
+    return `${hour - 12} pm`;
+  };
+
   const getTripDates = () => {
     if (!activeTrip) return [];
     const dates: string[] = [];
@@ -229,7 +234,7 @@ export default function ItineraryScreen() {
     };
   };
 
-  const selectedItems = selectedDate ? grouped[selectedDate] ?? [] : [];
+  const selectedItems = selectedDate ? (grouped[selectedDate] ?? []) : [];
   const blocks = selectedItems.filter((i) => i.itemType === "block");
   const events = selectedItems.filter((i) => i.itemType === "event");
   const selectedPark = PARKS.find((p) => p.id === itemParkId);
@@ -241,7 +246,7 @@ export default function ItineraryScreen() {
     setTimeout(
       () =>
         scrollRef.current?.scrollTo({ y: Math.max(0, y - 40), animated: true }),
-      100
+      100,
     );
   }, [selectedDate]);
 
@@ -306,7 +311,7 @@ export default function ItineraryScreen() {
         blocks,
         times.startMins,
         times.endMins,
-        editingItem?.$id
+        editingItem?.$id,
       );
       if (found) {
         setConflict(found);
@@ -390,7 +395,7 @@ export default function ItineraryScreen() {
         parkId: itemParkId,
         itemType: "block",
         blockDuration,
-      }
+      },
     );
 
     resetModal();
@@ -451,8 +456,8 @@ export default function ItineraryScreen() {
   }
 
   const conflictParkName = conflict
-    ? PARKS.find((p) => p.id === conflict.block.parkId)?.name ??
-      conflict.block.name
+    ? (PARKS.find((p) => p.id === conflict.block.parkId)?.name ??
+      conflict.block.name)
     : "";
 
   return (
@@ -467,11 +472,11 @@ export default function ItineraryScreen() {
         </Text>
         <Text className="text-sm mt-1" style={{ color: theme.textMuted }}>
           {new Date(
-            activeTrip.startDate.split("T")[0] + "T00:00:00"
+            activeTrip.startDate.split("T")[0] + "T00:00:00",
           ).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
           {" — "}
           {new Date(
-            activeTrip.endDate.split("T")[0] + "T00:00:00"
+            activeTrip.endDate.split("T")[0] + "T00:00:00",
           ).toLocaleDateString("en-GB", {
             day: "numeric",
             month: "long",
@@ -784,18 +789,28 @@ export default function ItineraryScreen() {
             className="rounded-t-3xl px-6 pt-6 pb-10"
             style={{ backgroundColor: theme.surface }}
           >
-            <Text
-              className="text-lg font-bold mb-6"
-              style={{ color: theme.text }}
-            >
-              {editingItem
-                ? modalType === "block"
-                  ? "Edit Park Block"
-                  : "Edit Event"
-                : modalType === "block"
-                ? "Add Park Block"
-                : "Add Event"}
-            </Text>
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-lg font-bold" style={{ color: theme.text }}>
+                {editingItem
+                  ? modalType === "block"
+                    ? "Edit Park Block"
+                    : "Edit Event"
+                  : modalType === "block"
+                    ? "Add Park Block"
+                    : "Add Event"}
+              </Text>
+              {editingItem && (
+                <TouchableOpacity
+                  onPress={() => {
+                    removeItem(editingItem.$id);
+                    resetModal();
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                </TouchableOpacity>
+              )}
+            </View>
 
             {/* Conflict warning */}
             {conflict && (
@@ -898,13 +913,13 @@ export default function ItineraryScreen() {
                 <ScrollView nestedScrollEnabled>
                   {(() => {
                     const tripParks = PARKS.filter((p) =>
-                      activeTrip!.parks.includes(p.id)
+                      activeTrip!.parks.includes(p.id),
                     );
                     const onSchedule = tripParks.filter((p) =>
-                      blocks.some((b) => b.parkId === p.id)
+                      blocks.some((b) => b.parkId === p.id),
                     );
                     const offSchedule = tripParks.filter(
-                      (p) => !blocks.some((b) => b.parkId === p.id)
+                      (p) => !blocks.some((b) => b.parkId === p.id),
                     );
                     const sorted =
                       modalType === "event"
@@ -999,10 +1014,10 @@ export default function ItineraryScreen() {
                         {opt === "full"
                           ? "Full Day"
                           : opt === "am"
-                          ? "AM"
-                          : opt === "pm"
-                          ? "PM"
-                          : "Custom"}
+                            ? "AM"
+                            : opt === "pm"
+                              ? "PM"
+                              : "Custom"}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -1180,8 +1195,8 @@ export default function ItineraryScreen() {
                     ? "Save Block"
                     : "Save Event"
                   : modalType === "block"
-                  ? "Add Block"
-                  : "Add Event"}
+                    ? "Add Block"
+                    : "Add Event"}
               </Text>
             </TouchableOpacity>
 
